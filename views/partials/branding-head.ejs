@@ -1,0 +1,46 @@
+<%
+  const safeBrandGroup =
+    typeof data !== "undefined" && data && data.group
+      ? data.group
+      : {};
+
+  const headBranding = safeBrandGroup.branding || {};
+  const headSiteName =
+    headBranding.siteName || safeBrandGroup.name || "VTuber Nexus";
+
+  const headBrowserTitle =
+    headBranding.browserTitle || headSiteName;
+
+  const headSubtitle =
+    headBranding.subtitle || "Community Hub";
+
+  const rawSocialImage = headBranding.socialImage || "";
+  const safeBaseUrl =
+    typeof siteBaseUrl !== "undefined"
+      ? String(siteBaseUrl || "").replace(/\/+$/, "")
+      : "";
+
+  const socialImageUrl =
+    /^https?:\/\//i.test(rawSocialImage)
+      ? rawSocialImage
+      : rawSocialImage && safeBaseUrl
+        ? `${safeBaseUrl}${rawSocialImage}`
+        : rawSocialImage;
+%>
+<meta name="application-name" content="<%= headBrowserTitle %>">
+<meta name="apple-mobile-web-app-title" content="<%= headBrowserTitle %>">
+<meta property="og:site_name" content="<%= headSiteName %>">
+<meta property="og:title" content="<%= headBrowserTitle %>">
+<meta property="og:description" content="<%= headSubtitle %>">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="<%= socialImageUrl ? "summary_large_image" : "summary" %>">
+<meta name="twitter:title" content="<%= headBrowserTitle %>">
+<meta name="twitter:description" content="<%= headSubtitle %>">
+<% if (headBranding.favicon) { %>
+  <link rel="icon" href="<%= headBranding.favicon %>">
+  <link rel="apple-touch-icon" href="<%= headBranding.favicon %>">
+<% } %>
+<% if (socialImageUrl) { %>
+  <meta property="og:image" content="<%= socialImageUrl %>">
+  <meta name="twitter:image" content="<%= socialImageUrl %>">
+<% } %>

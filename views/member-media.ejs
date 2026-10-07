@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Dateien und Medien · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+
+  <main>
+    <section class="page-hero compact-hero">
+      <span class="eyebrow">Mitgliederbereich</span>
+      <h1>Dateien und Medien</h1>
+      <p>Bilder, Logos, Overlays, Dokumente und Projektdateien sicher im Team teilen.</p>
+    </section>
+
+    <section class="section media-layout">
+      <aside class="media-sidebar">
+        <section class="panel">
+          <span class="eyebrow">Upload</span>
+          <h2>Datei bereitstellen</h2>
+
+          <form method="post" action="/member-area/media" enctype="multipart/form-data" class="stack">
+            <label>Datei
+              <input name="mediaFile" type="file"
+                accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.json,.docx,.zip" required>
+              <small class="field-help">Maximal 15 MB. Kein HTML oder SVG.</small>
+            </label>
+
+            <label>Titel
+              <input name="title" maxlength="140" placeholder="Optional, sonst Dateiname">
+            </label>
+
+            <label>Kategorie
+              <select name="category">
+                <option value="image">Bild</option>
+                <option value="logo">Logo</option>
+                <option value="overlay">Overlay</option>
+                <option value="document">Dokument</option>
+                <option value="archive">Archiv</option>
+                <option value="other">Sonstiges</option>
+              </select>
+            </label>
+
+            <label>Sichtbarkeit
+              <select name="visibility" id="mediaVisibility">
+                <option value="all">Alle Mitglieder</option>
+                <option value="project">Mitglieder eines Projekts</option>
+                <option value="selected">Ausgewählte Mitglieder</option>
+              </select>
+            </label>
+
+            <label id="mediaProjectField" hidden>Projekt
+              <select name="projectId">
+                <option value="">Projekt auswählen</option>
+                <% (data.projects || []).forEach(project => { %>
+                  <option value="<%= project.id %>"><%= project.title %></option>
+                <% }) %>
+              </select>
+            </label>
+
+            <fieldset id="mediaMembersField" class="private-members-field" hidden>
+              <legend>Ausgewählte Mitglieder</legend>
+              <div class="member-checkbox-grid">
+                <% data.members.forEach(target => { %>
+                  <label class="checkbox-line">
+                    <input type="checkbox" name="allowedMemberIds" value="<%= target.id %>">
+                    <%= target.name %>
+                  </label>
+                <% }) %>
+              </div>
+            </fieldset>
+
+            <label>Beschreibung
+              <textarea name="description" rows="4" maxlength="2000"></textarea>
+            </label>
+
+            <button class="button primary" type="submit">Datei hochladen</button>
+          </form>
+        </section>
+      </aside>
+
+      <div>
+        <section class="panel media-search-panel">
+          <div class="media-search-controls">
+            <input id="mediaSearch" type="search" placeholder="Dateien durchsuchen ...">
+            <select id="mediaCategory">
+              <option value="">Alle Kategorien</option>
+              <option value="image">Bilder</option>
+              <option value="logo">Logos</option>
+              <option value="overlay">Overlays</option>
+              <option value="document">Dokumente</option>
+              <option value="archive">Archive</option>
+              <option value="other">Sonstiges</option>
+            </select>
+          </div>
+          <p class="field-help" id="mediaResultCount"></p>
+        </section>
+
+        <div class="media-grid" id="mediaGrid">
+          <% if (!files.length) { %>
+            <article class="panel"><h2>Noch keine Dateien</h2><p>Der Dateitresor wartet auf seinen ersten Inhalt.</p></article>
+          <% } %>
+
+          <% files.forEach(file => { %>
+            <article class="panel media-card"
+              id="<%= file.id %>"
+              data-title="<%= file.title.toLowerCase() %>"
+              data-category="<%= file.category %>">
+
+              <% if ((file.mimeType || "").startsWith("image/")) { %>
+                <a href="/member-area/media/<%= file.id %>/file" target="_blank" class="media-preview">
+                  <img src="/member-area/media/<%= file.id %>/file" alt="">
+                </a>
+              <% } else { %>
+                <div class="media-file-icon">
+                  <span><%= file.mimeType === "application/pdf" ? "PDF" :
+                    file.category === "archive" ? "ZIP" :
+                    file.category === "document" ? "DOC" : "FILE" %></span>
+                </div>
+              <% } %>
+
+              <div class="media-card-body">
+                <span class="community-category-badge"><%= file.category %></span>
+                <h2><%= file.title %></h2>
+                <% if (file.description) { %><p><%= file.description %></p><% } %>
+
+                <div class="media-meta">
+                  <span>Von <%= file.uploader?.name || "Gelöschtes Mitglied" %></span>
+                  <span><%= (file.size / 1024 / 1024).toFixed(2) %> MB</span>
+                  <% if (file.project) { %><span>Projekt: <%= file.project.title %></span><% } %>
+                </div>
+
+                <div class="media-actions">
+                  <% if ((file.mimeType || "").startsWith("image/") || file.mimeType === "application/pdf") { %>
+                    <a class="button small" href="/member-area/media/<%= file.id %>/file" target="_blank">Vorschau</a>
+                  <% } %>
+                  <a class="button small primary" href="/member-area/media/<%= file.id %>/file?download=1">Herunterladen</a>
+
+                  <% if (canAdmin || file.uploaderMemberId === member.id) { %>
+                    <form method="post" action="/member-area/media/<%= file.id %>/delete"
+                      onsubmit="return confirm('Datei endgültig löschen?')">
+                      <button class="button small danger" type="submit">Löschen</button>
+                    </form>
+                  <% } %>
+                </div>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+
+        <p class="panel" id="mediaEmptySearch" hidden>Keine passenden Dateien gefunden.</p>
+      </div>
+    </section>
+  </main>
+
+  <%- include("partials/footer", { data }) %>
+
+<script>
+(() => {
+  const visibility = document.getElementById("mediaVisibility");
+  const projectField = document.getElementById("mediaProjectField");
+  const membersField = document.getElementById("mediaMembersField");
+
+  function updateVisibilityFields() {
+    if (!visibility) return;
+    projectField.hidden = visibility.value !== "project";
+    membersField.hidden = visibility.value !== "selected";
+    projectField.querySelectorAll("select").forEach(el => el.disabled = projectField.hidden);
+    membersField.querySelectorAll("input").forEach(el => el.disabled = membersField.hidden);
+  }
+
+  visibility?.addEventListener("change", updateVisibilityFields);
+  updateVisibilityFields();
+
+  const search = document.getElementById("mediaSearch");
+  const category = document.getElementById("mediaCategory");
+  const cards = [...document.querySelectorAll(".media-card")];
+  const count = document.getElementById("mediaResultCount");
+  const empty = document.getElementById("mediaEmptySearch");
+
+  function filterMedia() {
+    const term = (search?.value || "").trim().toLocaleLowerCase("de-DE");
+    const selected = category?.value || "";
+    let visible = 0;
+
+    cards.forEach(card => {
+      const matchesText = !term || card.dataset.title.includes(term) ||
+        card.textContent.toLocaleLowerCase("de-DE").includes(term);
+      const matchesCategory = !selected || card.dataset.category === selected;
+      card.hidden = !(matchesText && matchesCategory);
+      if (!card.hidden) visible += 1;
+    });
+
+    count.textContent = `${visible} ${visible === 1 ? "Datei" : "Dateien"} sichtbar`;
+    empty.hidden = visible !== 0 || cards.length === 0;
+  }
+
+  search?.addEventListener("input", filterMedia);
+  category?.addEventListener("change", filterMedia);
+  filterMedia();
+})();
+</script>
+</body>
+</html>

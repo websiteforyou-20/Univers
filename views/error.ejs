@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fehler · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="hero">
+      <span class="eyebrow">Technischer Zwischenfall</span>
+      <h1>Etwas ist aus der Umlaufbahn geraten.</h1>
+      <p><%= typeof message !== "undefined" ? message : "Ein unbekannter Fehler ist aufgetreten." %></p>
+      <% if (typeof requestId !== "undefined" && requestId) { %>
+        <p class="request-id"><strong>Vorgangsnummer:</strong> <code><%= requestId %></code></p>
+        <p class="field-help">Notiere diese Nummer zusammen mit einem Screenshot des Serverfensters.</p>
+      <% } %>
+      <a class="button primary" href="/">Zur Startseite</a>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

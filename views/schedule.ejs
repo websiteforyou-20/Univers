@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Streamplan · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">Was läuft wann?</span>
+      <h1>Streamplan</h1>
+      <p>Die regelmäßigen Streaming-Zeiten unserer Mitglieder auf einen Blick.</p>
+    </section>
+
+    <section class="section schedule-list">
+      <% let hasSchedule = false; %>
+      <% data.members.forEach(member => { %>
+        <% (member.schedule || []).forEach(slot => { hasSchedule = true; %>
+          <article class="schedule-row">
+            <div class="avatar small-avatar" style="--a:<%= member.color1 %>;--b:<%= member.color2 %>">
+              <% if (member.avatar) { %><img src="<%= member.avatar %>" alt=""><% } else { %><%= member.name.charAt(0) %><% } %>
+            </div>
+            <strong><%= member.name %></strong>
+            <span><%= slot %></span>
+            <span><%= member.streamTitle || "Stream" %></span>
+            <a class="button small" href="/member/<%= member.id %>">Profil</a>
+          </article>
+        <% }) %>
+      <% }) %>
+
+      <% if (!hasSchedule) { %>
+        <div class="panel empty-state">
+          <h2>Noch keine Streamzeiten eingetragen.</h2>
+          <p>Die Zeiten können im Admin-Bereich bei jedem Mitglied ergänzt werden.</p>
+        </div>
+      <% } %>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

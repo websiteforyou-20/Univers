@@ -1,0 +1,29 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Bewerbung · <%= data.group.branding?.browserTitle || data.group.name %></title><link rel="stylesheet" href="/styles.css?v=30.1.2">  <%- include("partials/branding-head", { data }) %>
+</head><body><header><a class="brand" href="/admin"><span class="mark"><%= data.group.branding?.adminAbbreviation || data.group.branding?.abbreviation || "VN" %></span><span>Bewerbung</span></a></header><main>
+  <div class="detail-toolbar">
+    <a class="button small" href="/admin">← Zurück zum Admin-Bereich</a>
+  </div>
+  <section class="page-hero"><span class="eyebrow">Bewerbung prüfen</span><h1><%= application.name %></h1>
+      <div class="info-box">
+        <strong>Hinweise zur Bearbeitung</strong>
+        <p>Interne Notizen sind nur für Gründer und Moderatoren sichtbar und werden Bewerbern nicht automatisch mitgeteilt.</p>
+        <p>Beim Annehmen wird ein Mitgliederprofil erstellt. Zugangsdaten müssen anschließend separat eingerichtet werden.</p>
+        <p>Endgültig gelöschte Bewerbungen können nur über ein vorhandenes Backup wiederhergestellt werden.</p>
+      </div><p>Status: <strong><%= application.status %></strong></p></section><section class="application-detail-grid"><article class="panel"><h2><%= application.platform %></h2><p><strong>Kanal:</strong> <a href="<%= application.channelUrl %>" target="_blank"><%= application.channelUrl %></a></p><p><%= application.message %></p>
+      <section class="panel contact-result-card">
+        <span class="eyebrow">Kontaktmöglichkeit</span>
+        <% if ((application.contactMethod || "discord") === "email") { %>
+          <h2>Antwort per E-Mail</h2>
+          <p><strong>E-Mail:</strong>
+            <a href="mailto:<%= application.contactEmail || "" %>">
+              <%= application.contactEmail || "Nicht angegeben" %>
+            </a>
+          </p>
+        <% } else { %>
+          <h2>Antwort per Discord-DM</h2>
+          <p><strong>Discord-Name:</strong> <%= application.contactDiscordName || application.discord || "Nicht angegeben" %></p>
+          <p><strong>Discord-ID:</strong> <code><%= application.contactDiscordId || "Bei älterer Bewerbung nicht vorhanden" %></code></p>
+        <% } %>
+      </section>
+
+      </article><aside><article class="panel"><h2>Interne Notiz</h2><form method="post" action="/admin/application/<%= application.id %>/note"><textarea name="internalNote" rows="8"><%= application.internalNote || "" %></textarea><button class="button" type="submit">Notiz speichern</button></form></article><article class="panel" style="margin-top:1rem"><h2>Entscheidung</h2><div class="decision-grid"><form method="post" action="/admin/application/<%= application.id %>/status"><input type="hidden" name="status" value="rueckfrage"><button class="button">Rückfrage</button></form><form method="post" action="/admin/application/<%= application.id %>/status"><input type="hidden" name="status" value="angenommen"><button class="button primary">Annehmen & Mitglied erstellen</button></form><form method="post" action="/admin/application/<%= application.id %>/status"><input type="hidden" name="status" value="abgelehnt"><button class="button">Ablehnen</button></form><form method="post" action="/admin/application/<%= application.id %>/delete" onsubmit="return confirm('Bewerbung von <%= application.name %> wirklich endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.')"><button class="button danger" type="submit">Bewerbung endgültig löschen</button></form></div></article></aside></section></main></body></html>

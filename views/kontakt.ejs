@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kontakt · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <% const savedForm = formData || {}; %>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">Nachricht senden</span>
+      <h1>Kontakt</h1>
+      <p>Fragen zur Gruppe, zu Projekten oder zur Zusammenarbeit können hier geschickt werden.</p>
+    </section>
+    <section class="panel contact-panel">
+      <% if (success) { %>
+        <div class="success-box">
+          <h2>Nachricht gespeichert</h2>
+          <p>Deine Nachricht ist in der Gruppenverwaltung angekommen.</p>
+          <a class="button primary" href="/">Zur Startseite</a>
+        </div>
+      <% } else { %>
+        <% if (error) { %><p class="error"><%= error %></p><% } %>
+        <form method="post" action="/kontakt">
+          <div class="row">
+            <label>Name<input name="name" required maxlength="100"></label>
+            
+        <fieldset class="contact-choice">
+          <legend>Wie dürfen wir dir antworten?</legend>
+
+          <div class="contact-method-options">
+            <label class="choice-card">
+              <input type="radio" name="contactMethod" value="discord"
+                <%= (savedForm.contactMethod || "discord") === "discord" ? "checked" : "" %>>
+              <span><strong>Discord-DM</strong><small>Antwort direkt über Discord</small></span>
+            </label>
+
+            <label class="choice-card">
+              <input type="radio" name="contactMethod" value="email"
+                <%= savedForm.contactMethod === "email" ? "checked" : "" %>>
+              <span><strong>E-Mail</strong><small>Antwort an deine E-Mail-Adresse</small></span>
+            </label>
+          </div>
+
+          <div class="contact-fields" data-contact-fields="discord">
+            <label>Vollständiger Discord-Name
+              <input name="discordName" value="<%= savedForm.discordName || "" %>"
+                placeholder="Zum Beispiel: jokoder">
+            </label>
+            <label>Discord-ID
+              <input name="discordId" value="<%= savedForm.discordId || "" %>"
+                inputmode="numeric" placeholder="123456789012345678">
+            </label>
+          </div>
+
+          <div class="contact-fields" data-contact-fields="email">
+            <label>E-Mail-Adresse
+              <input name="email" type="email" value="<%= savedForm.email || "" %>"
+                placeholder="name@beispiel.de">
+            </label>
+          </div>
+        </fieldset>
+
+          </div>
+          <label>Betreff<input name="subject" required maxlength="160"></label>
+          <label>Nachricht<textarea name="message" rows="8" required maxlength="5000"></textarea></label>
+          <button class="button primary" type="submit">Nachricht absenden</button>
+        </form>
+      <% } %>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+
+<script>
+(() => {
+  const radios = document.querySelectorAll('input[name="contactMethod"]');
+  const groups = document.querySelectorAll("[data-contact-fields]");
+
+  function updateContactChoice() {
+    const selected =
+      document.querySelector('input[name="contactMethod"]:checked')?.value ||
+      "discord";
+
+    groups.forEach(group => {
+      const active = group.dataset.contactFields === selected;
+      group.hidden = !active;
+
+      group.querySelectorAll("input").forEach(input => {
+        input.required = active;
+      });
+    });
+  }
+
+  radios.forEach(radio => radio.addEventListener("change", updateContactChoice));
+  updateContactChoice();
+})();
+</script>
+
+</body>
+</html>

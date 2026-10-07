@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerade live · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">Jetzt auf Sendung</span>
+      <h1>Gerade live</h1>
+      <p>Twitch-Kanäle werden automatisch geprüft. Der manuelle Schalter bleibt für andere Plattformen erhalten.</p>
+    </section>
+
+    <section class="section">
+      <% if (!data.twitchConfigured) { %>
+        <p class="warning-box">Twitch ist nicht verbunden. Prüfe TWITCH_CLIENT_ID und TWITCH_CLIENT_SECRET in der .env-Datei.</p>
+      <% } else if (data.twitchError) { %>
+        <p class="warning-box">Twitch-Abfrage fehlgeschlagen: <%= data.twitchError %></p>
+      <% } %>
+
+      <% if (liveMembers.length === 0) { %>
+        <div class="panel empty-state">
+          <h2>Im Moment ist niemand live.</h2>
+          <p>Die Bühne ist gerade dunkel, aber nicht verlassen. Schau später noch einmal vorbei.</p>
+          <a class="button" href="/schedule">Streamplan ansehen</a>
+        </div>
+      <% } else { %>
+        <div class="grid">
+          <% liveMembers.forEach(member => { %>
+            <article class="card live-card">
+              <% if (member.twitchStream?.thumbnail) { %>
+                <a class="stream-image" href="<%= member.twitch || `https://twitch.tv/${member.twitchLogin}` %>" target="_blank" rel="noopener">
+                  <img src="<%= member.twitchStream.thumbnail %>" alt="Livestream-Vorschau">
+                  <span class="live-label">LIVE</span>
+                  <span class="viewer-badge"><%= member.twitchStream.viewer_count %> Zuschauer</span>
+                </a>
+              <% } else { %>
+                <div class="stream-placeholder">
+                  <span class="live-label">LIVE</span>
+                  <span class="play-symbol">▶</span>
+                </div>
+              <% } %>
+              <div class="live-info">
+                <div class="avatar small-avatar" style="--a:<%= member.color1 %>;--b:<%= member.color2 %>">
+                  <% if (member.avatar) { %><img src="<%= member.avatar %>" alt=""><% } else { %><%= member.name.charAt(0) %><% } %>
+                </div>
+                <div>
+                  <h3><%= member.twitchStream?.title || member.streamTitle || member.name %></h3>
+                  <p><%= member.name %><% if (member.twitchStream?.game_name) { %> · <%= member.twitchStream.game_name %><% } %></p>
+                </div>
+              </div>
+              <div class="links">
+                <% if (member.twitch) { %><a class="button primary" href="<%= member.twitch %>" target="_blank" rel="noopener">Stream öffnen</a><% } %>
+                <a class="button" href="/member/<%= member.id %>">Profil</a>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

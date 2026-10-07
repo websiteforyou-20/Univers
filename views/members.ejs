@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mitglieder · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">Unsere Crew</span>
+      <h1>Mitglieder</h1>
+      <p>Filtere die Gruppe nach Sprache, Themen oder aktuellem Live-Status.</p>
+    </section>
+
+    <form class="filter-panel panel" method="get" action="/members">
+      <label>Sprache
+        <select name="language">
+          <option value="">Alle Sprachen</option>
+          <% languages.forEach(language => { %>
+            <option value="<%= language %>" <%= filters.language === language ? "selected" : "" %>><%= language %></option>
+          <% }) %>
+        </select>
+      </label>
+
+      <label>Tag
+        <select name="tag">
+          <option value="">Alle Tags</option>
+          <% tags.forEach(tag => { %>
+            <option value="<%= tag %>" <%= filters.tag === tag ? "selected" : "" %>><%= tag %></option>
+          <% }) %>
+        </select>
+      </label>
+
+      <label>Status
+        <select name="status">
+          <option value="">Alle</option>
+          <option value="live" <%= filters.status === "live" ? "selected" : "" %>>Gerade live</option>
+          <option value="offline" <%= filters.status === "offline" ? "selected" : "" %>>Offline</option>
+        </select>
+      </label>
+
+      <button class="button primary" type="submit">Filtern</button>
+      <a class="button" href="/members">Zurücksetzen</a>
+    </form>
+
+    <section class="section">
+      <% if (!members.length) { %>
+        <div class="panel empty-state">
+          <h2>Keine Mitglieder gefunden.</h2>
+          <p>Versuche eine andere Filterkombination.</p>
+        </div>
+      <% } else { %>
+        <div class="grid">
+          <% members.forEach(member => { %>
+            <article class="card">
+              <div class="avatar" style="--a:<%= member.color1 %>;--b:<%= member.color2 %>">
+                <% if (member.avatar) { %><img src="<%= member.avatar %>" alt=""><% } else { %><%= member.name.charAt(0) %><% } %>
+              </div>
+              <span class="status <%= member.effectiveLive ? "live" : "" %>"><%= member.effectiveLive ? "Gerade live" : "Offline" %></span>
+              <h3><%= member.name %></h3>
+              <strong><%= member.role %></strong>
+              <p><%= member.bio %></p>
+              <div class="tags">
+                <% (member.tags || []).forEach(tag => { %><span class="tag"><%= tag %></span><% }) %>
+              </div>
+              <a class="button primary" href="/member/<%= member.id %>">Profil öffnen</a>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

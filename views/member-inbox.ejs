@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Postfach · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="page-hero compact-hero">
+      <span class="eyebrow">Mitgliederbereich</span>
+      <h1>Postfach und Aufgaben</h1>
+      <p>Nur du sowie Gründer und Moderatoren können diese Inhalte sehen.</p>
+    </section>
+
+    <section class="inbox-layout section">
+      <div>
+        <div class="section-head">
+          <div><span class="eyebrow">Nachrichten</span><h2>Internes Postfach</h2></div>
+          <span><%= messages.filter(item => !item.readAt).length %> ungelesen</span>
+        </div>
+        <div class="internal-list">
+          <% if (!messages.length) { %><div class="panel"><p>Noch keine Nachrichten.</p></div><% } %>
+          <% messages.forEach(item => { %>
+            <article class="panel internal-message-card <%= item.readAt ? 'is-read' : 'is-unread' %>">
+              <div class="internal-card-head">
+                <div><span class="eyebrow"><%= item.readAt ? "Gelesen" : "Neu" %></span><h3><%= item.title %></h3></div>
+                <small><%= new Date(item.createdAt).toLocaleString("de-DE") %></small>
+              </div>
+              <p class="internal-content"><%= item.content %></p>
+              <p class="field-help">Von <strong><%= item.senderName %></strong></p>
+              <% if (!item.readAt) { %>
+                <form method="post" action="/member-area/message/<%= item.id %>/read">
+                  <button class="button small primary">Als gelesen markieren</button>
+                </form>
+              <% } %>
+            </article>
+          <% }) %>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-head">
+          <div><span class="eyebrow">Aufgaben</span><h2>Meine Aufgaben</h2></div>
+          <span><%= tasks.filter(item => item.status !== "erledigt").length %> offen</span>
+        </div>
+        <div class="internal-list">
+          <% if (!tasks.length) { %><div class="panel"><p>Keine Aufgaben vorhanden.</p></div><% } %>
+          <% tasks.forEach(task => { %>
+            <article class="panel task-card <%= task.status === 'erledigt' ? 'is-complete' : '' %>">
+              <div class="internal-card-head">
+                <div><span class="eyebrow"><%= task.status === "erledigt" ? "Erledigt" : "Offen" %></span><h3><%= task.title %></h3></div>
+                <% if (task.dueDate) { %><strong class="task-due">Frist: <%= task.dueDate %></strong><% } %>
+              </div>
+              <% if (task.description) { %><p class="internal-content"><%= task.description %></p><% } %>
+              <p class="field-help">Von <strong><%= task.creatorName %></strong></p>
+              <form method="post" action="/member-area/task/<%= task.id %>/toggle">
+                <button class="button small <%= task.status === 'erledigt' ? '' : 'primary' %>">
+                  <%= task.status === "erledigt" ? "Wieder öffnen" : "Als erledigt markieren" %>
+                </button>
+              </form>
+            </article>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

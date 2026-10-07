@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gründerzugang reparieren · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+
+  <main>
+    <section class="hero owner-recovery-card">
+      <span class="eyebrow">Notfall-Reparatur</span>
+      <h1>Gründerzugang reparieren</h1>
+
+      <p>
+        Du bist als <strong><%= member?.name || "Mitglied" %></strong> angemeldet,
+        aber dein Gründerrecht wurde von einer fehlerhaften Rollen-Migration
+        möglicherweise auf „Mitglied“ zurückgesetzt.
+      </p>
+
+      <% if (error) { %>
+        <p class="error-message"><%= error %></p>
+      <% } %>
+
+      <div class="role-security-note">
+        <strong>🔒 Sicherheitsprüfung</strong>
+        <p>
+          Die Reparatur funktioniert nur mit dem ADMIN_PASSWORD aus deiner
+          lokalen <code>.env</code>. Das Passwort wird nicht angezeigt oder gespeichert.
+        </p>
+      </div>
+
+      <form method="post" action="/owner-recovery" class="stack">
+        <label>ADMIN_PASSWORD aus der .env
+          <input
+            name="adminPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+          >
+        </label>
+
+        <button class="button primary" type="submit">
+          Gründerzugang wiederherstellen
+        </button>
+      </form>
+
+      <div class="actions">
+        <a class="button" href="/member-area">Zurück zum Mitgliederbereich</a>
+      </div>
+    </section>
+  </main>
+
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

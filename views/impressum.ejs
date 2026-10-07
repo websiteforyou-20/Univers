@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impressum · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">Rechtliche Angaben</span>
+      <h1>Impressum</h1>
+      <p class="warning-box">Vorlage: Bitte vor einer öffentlichen Veröffentlichung vollständig prüfen und korrekt ausfüllen.</p>
+    </section>
+    <section class="panel legal-page">
+      <h2>Angaben zum Betreiber</h2>
+      <p><strong>Name:</strong> <%= data.legal.operatorName %></p>
+      <p><strong>Anschrift:</strong><br><%= data.legal.address %></p>
+      <p><strong>E-Mail:</strong> <%= data.legal.email %></p>
+      <h2>Verantwortlich für Inhalte</h2>
+      <p><%= data.legal.responsible %></p>
+      <h2>Externe Plattformen</h2>
+      <p>Diese Webseite verlinkt auf externe Plattformen wie Twitch, YouTube und TikTok. Für deren Inhalte und Datenschutzbestimmungen sind die jeweiligen Anbieter verantwortlich.</p>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

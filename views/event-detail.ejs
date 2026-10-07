@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= event.title %> · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="event-detail-hero">
+      <span class="eyebrow">Community-Event</span>
+      <h1><%= event.title %></h1>
+      <div class="event-facts">
+        <span>📅 <%= event.date %></span>
+        <span>🕒 <%= event.time %></span>
+        <span>👥 <%= (event.registrations || []).filter(item => item.status !== "abgesagt").length %> Anmeldungen</span>
+      </div>
+      <p><%= event.description %></p>
+      <div class="actions">
+        <a class="button" href="/events/<%= event.id %>/calendar.ics">Kalenderdatei herunterladen</a>
+        <a class="button" href="/events">Alle Events</a>
+      </div>
+    </section>
+
+    <section class="event-detail-grid">
+      <article class="panel">
+        <h2>Teilnehmen</h2>
+        <form method="post" action="/events/<%= event.id %>/register">
+          <label>Name<input name="name" required maxlength="100"></label>
+          <label>E-Mail<input name="email" type="email" required maxlength="200"></label>
+          <label>Nachricht, freiwillig<textarea name="note" rows="5" maxlength="1000"></textarea></label>
+          <button class="button primary" type="submit">Teilnahme anmelden</button>
+        </form>
+      </article>
+
+      <aside class="panel">
+        <h2>Gut zu wissen</h2>
+        <p>Nach der Anmeldung erscheint dein Eintrag im geschützten Admin-Bereich. Deine E-Mail-Adresse wird nicht öffentlich angezeigt.</p>
+        <p>Über die Kalenderdatei kannst du den Termin in viele Kalenderprogramme importieren.</p>
+      </aside>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

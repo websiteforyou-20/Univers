@@ -1,0 +1,49 @@
+services:
+  vtuber-nexus:
+    build:
+      context: .
+    container_name: vtuber-nexus
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 20s
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      DATABASE_PATH: /app/data/nexus.db
+      UPLOAD_DIR: /app/public/uploads
+      MEDIA_DIR: /app/data/media
+      BACKUP_DIR: /app/data/backups
+      SESSION_DIR: /app/data/sessions
+
+    ports:
+      - "127.0.0.1:3000:3000"
+
+    volumes:
+      - ./storage/data:/app/data
+      - ./storage/uploads:/app/public/uploads
+
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid,nodev
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+        ]
+      interval: 30s
+      timeout: 8s
+      retries: 4
+      start_period: 30s

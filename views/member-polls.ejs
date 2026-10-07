@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Abstimmungen · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+
+  <main>
+    <section class="page-hero compact-hero">
+      <span class="eyebrow">Mitgliederbereich</span>
+      <h1>Abstimmungen und Umfragen</h1>
+      <p>Gemeinsam Entscheidungen treffen, Ideen bewerten und Ergebnisse transparent sehen.</p>
+    </section>
+
+    <section class="section poll-grid">
+      <% if (!polls.length) { %>
+        <article class="panel">
+          <h2>Noch keine Abstimmungen</h2>
+          <p>Hier ist es demokratisch still.</p>
+        </article>
+      <% } %>
+
+      <% polls.forEach(poll => { %>
+        <article class="panel poll-card <%= poll.pinned ? 'is-pinned' : '' %>" id="<%= poll.id %>">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow"><%= poll.isOpen ? "Offen" : "Beendet" %></span>
+              <h2><%= poll.pinned ? "📌 " : "" %><%= poll.question %></h2>
+            </div>
+            <span><%= poll.totalVotes %> Stimmen</span>
+          </div>
+
+          <% if (poll.description) { %>
+            <p class="internal-content"><%= poll.description %></p>
+          <% } %>
+
+          <% if (poll.endsAt) { %>
+            <p class="field-help">Endet: <%= new Date(poll.endsAt).toLocaleString("de-DE") %></p>
+          <% } %>
+
+          <% if (poll.isOpen) { %>
+            <form method="post" action="/member-area/polls/<%= poll.id %>/vote" class="poll-options">
+              <% poll.options.forEach(option => { %>
+                <label class="poll-option <%= poll.ownVote?.optionId === option.id ? 'selected' : '' %>">
+                  <input type="radio" name="optionId" value="<%= option.id %>"
+                    <%= poll.ownVote?.optionId === option.id ? "checked" : "" %> required>
+                  <span><%= option.text %></span>
+                </label>
+              <% }) %>
+              <button class="button primary" type="submit">
+                <%= poll.ownVote ? "Stimme ändern" : "Abstimmen" %>
+              </button>
+            </form>
+          <% } %>
+
+          <div class="poll-results">
+            <% poll.results.forEach(result => { %>
+              <% const percent = poll.totalVotes ? Math.round(result.count / poll.totalVotes * 100) : 0; %>
+              <div class="poll-result">
+                <div class="section-head">
+                  <strong><%= result.text %></strong>
+                  <span><%= result.count %> · <%= percent %>%</span>
+                </div>
+                <div class="poll-result-bar">
+                  <span style="width:<%= percent %>%"></span>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+
+          <p class="field-help">
+            <%= poll.anonymous
+              ? "Anonyme Abstimmung: Es wird öffentlich nicht angezeigt, wer wie abgestimmt hat."
+              : "Offene Abstimmung: Die Teamverwaltung kann Stimmen einzelnen Mitgliedern zuordnen." %>
+          </p>
+        </article>
+      <% }) %>
+    </section>
+  </main>
+
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

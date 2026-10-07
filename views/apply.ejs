@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bewerben · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <% const savedForm = formData || {}; %>
+  <%- include("partials/header", { data }) %>
+
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">Teil der Crew werden</span>
+      <h1>Bewerben</h1>
+      <p>Du bist VTuber oder Streamer und möchtest Teil unserer Gruppe werden? Stell dich kurz vor.</p>
+    </section>
+
+    <section class="apply-layout">
+      <div class="panel">
+        <h2>Was wir suchen</h2>
+        <p>Wir suchen kreative, respektvolle und aktive Mitglieder, die gemeinsam wachsen und an Projekten teilnehmen möchten.</p>
+        <div class="requirement-list">
+          <div><strong>Eigener Kanal</strong><span>Twitch, YouTube oder eine andere Streaming-Plattform</span></div>
+          <div><strong>Respektvoller Umgang</strong><span>Kein Drama-Zirkus mit brennendem Konfetti</span></div>
+          <div><strong>Gemeinschaft</strong><span>Interesse an Kollaborationen und gemeinsamen Events</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <% if (success) { %>
+          <div class="success-box">
+            <h2>Bewerbung abgeschickt</h2>
+            <p>Deine Bewerbung wurde gespeichert und kann nun von der Gruppenleitung angesehen werden.</p>
+            <a class="button primary" href="/">Zur Startseite</a>
+          </div>
+        <% } else { %>
+          <h2>Deine Bewerbung</h2>
+          <% if (error) { %><p class="error"><%= error %></p><% } %>
+
+          <form method="post" action="/apply" enctype="multipart/form-data">
+            <div class="row">
+              <label>Name oder Kanalname
+                <input name="name" required>
+              </label>
+              <label>Alter, freiwillig
+                <input name="age" type="number" min="16" max="99">
+              </label>
+            </div>
+
+            <label>Hauptplattform
+              <select name="platform" required>
+                <option value="">Bitte auswählen</option>
+                <option>Twitch</option>
+                <option>YouTube</option>
+                <option>Kick</option>
+                <option>TikTok</option>
+                <option>Andere</option>
+              </select>
+            </label>
+
+            <label>Kanal-Link
+              <input name="channelUrl" type="url" required placeholder="https://...">
+            </label>
+
+            
+        <fieldset class="contact-choice">
+          <legend>Wie dürfen wir dich kontaktieren?</legend>
+          <p class="field-help">Diese Angabe ist Pflicht, damit wir dir eine Annahme, Ablehnung oder Rückfrage mitteilen können.</p>
+
+          <div class="contact-method-options">
+            <label class="choice-card">
+              <input type="radio" name="contactMethod" value="discord"
+                <%= (savedForm.contactMethod || "discord") === "discord" ? "checked" : "" %>>
+              <span><strong>Discord-DM</strong><small>Antwort direkt über Discord</small></span>
+            </label>
+
+            <label class="choice-card">
+              <input type="radio" name="contactMethod" value="email"
+                <%= savedForm.contactMethod === "email" ? "checked" : "" %>>
+              <span><strong>E-Mail</strong><small>Antwort an deine E-Mail-Adresse</small></span>
+            </label>
+          </div>
+
+          <div class="contact-fields" data-contact-fields="discord">
+            <label>Vollständiger Discord-Name
+              <input name="discordName" value="<%= savedForm.discordName || savedForm.discord || "" %>"
+                placeholder="Zum Beispiel: jokoder">
+            </label>
+            <label>Discord-ID
+              <input name="discordId" value="<%= savedForm.discordId || "" %>"
+                inputmode="numeric" placeholder="123456789012345678">
+              <small class="field-help">Die numerische ID verhindert Verwechslungen mit ähnlich benannten Konten.</small>
+            </label>
+          </div>
+
+          <div class="contact-fields" data-contact-fields="email">
+            <label>E-Mail-Adresse
+              <input name="email" type="email" value="<%= savedForm.email || "" %>"
+                placeholder="name@beispiel.de">
+            </label>
+          </div>
+        </fieldset>
+
+
+            <label>Erzähl etwas über dich
+              <textarea name="message" rows="7" required placeholder="Was streamst du, wie oft bist du aktiv und warum möchtest du beitreten?"></textarea>
+            </label>
+
+            <label>Avatar oder Profilbild, freiwillig
+              <input name="avatar" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+            </label>
+
+            <div class="info-box">
+          <p>Bitte mache wahrheitsgemäße Angaben und nutze nur Bilder sowie Inhalte, die du verwenden darfst. Die Gruppenleitung verwendet deine Daten ausschließlich zur Bearbeitung der Bewerbung.</p>
+        </div>
+        <button class="button primary" type="submit">Bewerbung absenden</button>
+          </form>
+        <% } %>
+      </div>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+
+<script>
+(() => {
+  const radios = document.querySelectorAll('input[name="contactMethod"]');
+  const groups = document.querySelectorAll("[data-contact-fields]");
+
+  function updateContactChoice() {
+    const selected =
+      document.querySelector('input[name="contactMethod"]:checked')?.value ||
+      "discord";
+
+    groups.forEach(group => {
+      const active = group.dataset.contactFields === selected;
+      group.hidden = !active;
+
+      group.querySelectorAll("input").forEach(input => {
+        input.required = active;
+      });
+    });
+  }
+
+  radios.forEach(radio => radio.addEventListener("change", updateContactChoice));
+  updateContactChoice();
+})();
+</script>
+
+</body>
+</html>

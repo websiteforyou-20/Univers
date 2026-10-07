@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mein Profil · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<%
+  const safeMemberMessage =
+    typeof message !== "undefined" ? String(message || "") : "";
+%>
+<body class="member-settings-page">
+  <header>
+    <a class="brand" href="/">
+      <% if (data.group.branding?.logo || data.group.logo) { %>
+        <img class="group-logo" src="<%= data.group.branding?.logo || data.group.logo %>" alt="">
+      <% } else { %>
+        <span class="mark"><%= data.group.branding?.abbreviation || "VN" %></span>
+      <% } %>
+      <span>Mitgliederbereich</span>
+    </a>
+    <nav>
+      <a href="/member/<%= member.id %>">Mein öffentliches Profil</a>
+      <form method="post" action="/member-logout">
+        <button type="submit">Abmelden</button>
+      </form>
+    </nav>
+  </header>
+
+  <main>
+  <% if (typeof currentAccess !== "undefined" && currentAccess && !currentAccess.canAdmin) { %>
+    <div class="owner-recovery-hint">
+      <a href="/owner-recovery">Gründerzugang reparieren</a>
+    </div>
+  <% } %>
+    <section class="page-hero">
+      <span class="eyebrow">Eigene Profilverwaltung</span>
+      <h1>Hallo, <%= member.name %></h1>
+      <p>Du kannst hier deine öffentlichen Informationen bearbeiten. Rolle, Name und Kontozugang verwaltet weiterhin die Gruppenleitung.</p>
+      <div class="info-box">
+        <strong>Wichtig vor dem Speichern</strong>
+        <p>Änderungen erscheinen nach dem Speichern sofort auf deinem öffentlichen Profil. Prüfe daher Schreibweise, Links und Bilder sorgfältig.</p>
+      </div>
+      <% if (safeMemberMessage) { %><p class="notice"><%= safeMemberMessage %></p><% } %>
+    </section>
+
+
+    <section class="member-home-widgets">
+      <article class="panel dashboard-community-board">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Community-Pinnwand</span>
+            <h2>Neueste Beiträge</h2>
+          </div>
+          <a href="/member-area/community">Pinnwand öffnen</a>
+        </div>
+
+        <% if (!recentCommunityPosts.length) { %>
+          <p>Noch keine Beiträge vorhanden.</p>
+        <% } else { %>
+          <div class="dashboard-community-list">
+            <% recentCommunityPosts.forEach(post => { %>
+              <a href="/member-area/community#<%= post.id %>" class="dashboard-community-item">
+                <span class="community-category-badge category-<%= post.category %>">
+                  <%= post.category === "announcement" ? "Ankündigung" :
+                      post.category === "question" ? "Frage" :
+                      post.category === "project" ? "Projekt" :
+                      post.category === "stream" ? "Stream" : "Idee" %>
+                </span>
+                <strong><%= post.pinned ? "📌 " : "" %><%= post.title %></strong>
+                <small>Von <%= post.author.name %> · <%= post.commentCount %> Kommentare</small>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+      </article>
+
+      <article class="panel">
+        <span class="eyebrow">Schnellzugriff</span>
+        <h2>Interner Bereich</h2>
+        <div class="member-quick-links">
+          <a class="button" href="/member-area/inbox">Postfach</a>
+          <a class="button" href="/member-area/calendar">Teamkalender</a>
+          <a class="button primary" href="/member-area/community">Pinnwand</a>
+        </div>
+      </article>
+    </section>
+
+
+    <section class="member-home-widgets">
+      <article class="panel">
+        <div class="section-head">
+          <div><span class="eyebrow">Projektverwaltung</span><h2>Aktuelle Projekte</h2></div>
+          <a href="/member-area/projects">Öffnen</a>
+        </div>
+        <% if (!recentProjects.length) { %><p>Keine Projekte zugewiesen.</p><% } %>
+        <div class="dashboard-project-list">
+          <% recentProjects.forEach(project => { %>
+            <a class="dashboard-project-item" href="/member-area/projects#<%= project.id %>">
+              <strong><%= project.title %></strong>
+              <div class="project-progress-bar"><span style="width:<%= project.progress || 0 %>%"></span></div>
+              <small><%= project.progress || 0 %>%</small>
+            </a>
+          <% }) %>
+        </div>
+      </article>
+    </section>
+
+
+    <section class="member-home-widgets">
+      <article class="panel">
+        <div class="section-head">
+          <div><span class="eyebrow">Dateien und Medien</span><h2>Neueste Dateien</h2></div>
+          <a href="/member-area/media">Dateibereich öffnen</a>
+        </div>
+
+        <% if (!recentMediaFiles.length) { %>
+          <p>Noch keine Dateien für dich vorhanden.</p>
+        <% } else { %>
+          <div class="dashboard-media-list">
+            <% recentMediaFiles.forEach(file => { %>
+              <a class="dashboard-media-item" href="/member-area/media#<%= file.id %>">
+                <strong><%= file.title %></strong>
+                <span><%= file.category %> · <%= Math.max(1, Math.round(file.size / 1024)) %> KB</span>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+      </article>
+    </section>
+
+
+    <section class="member-home-widgets">
+      <article class="panel">
+        <div class="section-head">
+          <div><span class="eyebrow">Abstimmungen</span><h2>Aktuelle Umfragen</h2></div>
+          <a href="/member-area/polls">Alle öffnen</a>
+        </div>
+
+        <% if (!recentPolls.length) { %>
+          <p>Aktuell gibt es keine Abstimmungen.</p>
+        <% } else { %>
+          <div class="dashboard-poll-list">
+            <% recentPolls.forEach(poll => { %>
+              <a class="dashboard-poll-item" href="/member-area/polls#<%= poll.id %>">
+                <strong><%= poll.pinned ? "📌 " : "" %><%= poll.question %></strong>
+                <span><%= poll.isOpen ? "Offen" : "Beendet" %> · <%= poll.totalVotes %> Stimmen</span>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+      </article>
+    </section>
+
+    <section class="member-dashboard">
+      <article class="panel">
+        <h2>Profil bearbeiten</h2>
+        <form method="post" action="/member-area/profile" enctype="multipart/form-data">
+          <label>Stream-Titel
+            <input name="streamTitle" value="<%= member.streamTitle || "" %>">
+          </label>
+
+          <label>Beschreibung
+            <textarea name="bio" rows="6" maxlength="200" data-bio-field><%= member.bio || "" %></textarea>
+            <small class="field-help"><span data-bio-count>0</span>/200 Zeichen</small>
+          </label>
+
+          <div class="row">
+            <label>Pronomen
+              <input name="pronouns" value="<%= member.pronouns || "" %>">
+            </label>
+            <label>Sprachen
+              <input name="languages" value="<%= (member.languages || []).join(", ") %>">
+              <small class="field-help">Mehrere Sprachen mit Kommas trennen. Trage nur Sprachen ein, in denen du streamst oder mit deiner Community kommunizieren kannst.</small>
+            </label>
+          </div>
+
+          <label>Tags
+            <input name="tags" value="<%= (member.tags || []).join(", ") %>">
+            <small class="field-help">Tags helfen Besuchern bei Suche und Filtern. Beispiel: Minecraft, Deutsch, Strategie.</small>
+          </label>
+
+          <label>Lieblingsspiele
+            <input name="favoriteGames" value="<%= (member.favoriteGames || []).join(", ") %>">
+            <small class="field-help">Mehrere Spiele mit Kommas trennen.</small>
+          </label>
+
+          <label>Streamzeiten
+            <input name="schedule" value="<%= (member.schedule || []).join(", ") %>">
+            <small class="field-help">Beispiel: Dienstag 20:00, Freitag 21:00. Änderungen hier werden nicht automatisch zu Twitch übertragen.</small>
+          </label>
+
+          <div class="row">
+            <label>Twitch-Kanalname
+              <input name="twitchLogin" value="<%= member.twitchLogin || "" %>">
+              <small class="field-help">Nur den Namen aus der Twitch-Adresse eintragen, zum Beispiel <code>jokoder</code>, nicht den vollständigen Link.</small>
+            </label>
+            <label>Twitch-Link
+              <input name="twitch" type="url" value="<%= member.twitch || "" %>">
+              <small class="field-help">Bitte den vollständigen Link einschließlich <code>https://</code> eintragen.</small>
+            </label>
+          </div>
+
+          <div class="row">
+            <label>YouTube
+              <input name="youtube" type="url" value="<%= member.youtube || "" %>">
+              <small class="field-help">Vollständigen Kanal-Link einschließlich <code>https://</code> eintragen.</small>
+            </label>
+            <label>TikTok
+              <input name="tiktok" type="url" value="<%= member.tiktok || "" %>">
+              <small class="field-help">Vollständigen Profil-Link einschließlich <code>https://</code> eintragen.</small>
+            </label>
+          </div>
+
+          <div class="row">
+            <label>Discord
+              <input name="discord" value="<%= member.discord || "" %>">
+            </label>
+            <label>Debüt-Datum
+              <input name="debutDate" type="date" value="<%= member.debutDate || "" %>">
+            </label>
+          </div>
+
+          <div class="row">
+            <label>Model-Artist
+              <input name="artist" value="<%= member.artist || "" %>">
+            </label>
+            <label>Rigger
+              <input name="rigger" value="<%= member.rigger || "" %>">
+            </label>
+          </div>
+
+          <label>Clip-Links, durch Komma getrennt
+            <input name="clips" value="<%= (member.clips || []).join(", ") %>">
+            <small class="field-help">Vollständige Links zu Twitch-, YouTube- oder TikTok-Clips verwenden. Nutze nur Inhalte, an denen du die erforderlichen Rechte besitzt.</small>
+          </label>
+
+          <div class="row">
+            <label>Neuer Avatar, optional
+              <input name="avatar" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+              <small class="field-help">Empfohlen: quadratisch, mindestens 500 × 500 Pixel. Ein neuer Upload ersetzt das bisherige Bild. Verwende nur Bilder, die du nutzen darfst.</small>
+            </label>
+            <label>Neues Banner, optional
+              <input name="banner" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+              <small class="field-help">Empfohlen: breites Querformat, mindestens 1500 × 500 Pixel. Ein neuer Upload ersetzt das bisherige Banner.</small>
+            </label>
+          </div>
+
+          <button class="button primary" type="submit">Profil speichern</button>
+        </form>
+      </article>
+
+      <aside>
+
+        <article class="panel profile-design-editor">
+          <h2>Profil-Design</h2>
+          <p>Wähle ein Theme, eigene Farben und optional ein Hintergrundbild.</p>
+          <div class="info-box">
+            <strong>Getrennte Speicherung</strong>
+            <p>Der Knopf „Design speichern“ verändert ausschließlich dein Design. Twitch-Link, Beschreibung, Clips und andere Profildaten bleiben erhalten.</p>
+          </div>
+          <div class="design-preview" id="designPreview"><div><strong><%= member.name %></strong><small> Live-Vorschau</small></div></div>
+          <form method="post" action="/member-area/design" enctype="multipart/form-data">
+            <div class="theme-grid"><% Object.entries(profileThemes).forEach(([key,t])=>{ %><label class="theme-option"><input type="radio" name="profileTheme" value="<%= key %>" <%= ((member.profileDesign||{}).theme||'nexus')===key?'checked':'' %>><span style="--p:<%= t.primaryColor %>;--a:<%= t.accentColor %>;--b:<%= t.backgroundColor %>"></span><b><%= t.label %></b></label><% }) %></div>
+            <div class="row"><label>Hauptfarbe<input id="primaryColor" name="primaryColor" type="color" value="<%= (member.profileDesign||{}).primaryColor||'#7c5cff' %>"></label><label>Akzentfarbe<input id="accentColor" name="accentColor" type="color" value="<%= (member.profileDesign||{}).accentColor||'#35e0d0' %>"></label></div>
+            <div class="row"><label>Hintergrundfarbe<input id="backgroundColor" name="backgroundColor" type="color" value="<%= (member.profileDesign||{}).backgroundColor||'#090b16' %>"></label><label>Hintergrundstil<select id="backgroundStyle" name="backgroundStyle"><% [['gradient','Verlauf'],['waves','Wellen'],['glow','Leuchten'],['aurora','Aurora'],['soft','Weich'],['minimal','Minimal']].forEach(x=>{ %><option value="<%= x[0] %>" <%= ((member.profileDesign||{}).backgroundStyle||'gradient')===x[0]?'selected':'' %>><%= x[1] %></option><% }) %></select></label></div>
+            <label>Kartenstil
+              <select id="cardStyle" name="cardStyle">
+                <option value="glass" <%= ((member.profileDesign||{}).cardStyle||'glass')==='glass'?'selected':'' %>>Glas</option>
+                <option value="solid" <%= ((member.profileDesign||{}).cardStyle||'glass')==='solid'?'selected':'' %>>Kräftig</option>
+                <option value="soft" <%= ((member.profileDesign||{}).cardStyle||'glass')==='soft'?'selected':'' %>>Weich</option>
+              </select>
+            </label>
+            <label>Eigenes Hintergrundbild<input name="profileBackground" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><small class="field-help">Empfohlen: mindestens 1600 × 900 Pixel.</small></label>
+            <button class="button primary">Design speichern</button>
+          </form>
+          <form method="post" action="/member-area/design/reset" onsubmit="return confirm('Design zurücksetzen?')"><button class="button">Auf Standard zurücksetzen</button></form>
+        </article>
+        <article class="panel">
+          <h2>Passwort ändern</h2>
+          <p class="field-help">Verwende ein eigenes Passwort, das du nicht auf anderen Webseiten benutzt. Nach einer Änderung musst du dich möglicherweise erneut anmelden.</p>
+          <form method="post" action="/member-area/password">
+            <label>Aktuelles Passwort
+              <input name="currentPassword" type="password" required autocomplete="current-password">
+            </label>
+            <label>Neues Passwort
+              <input name="newPassword" type="password" minlength="12" required autocomplete="new-password">
+              <small class="field-help">Mindestens 12 Zeichen empfohlen.</small>
+            </label>
+            <label>Neues Passwort wiederholen
+              <input name="confirmation" type="password" minlength="12" required autocomplete="new-password">
+            </label>
+            <button class="button" type="submit">Passwort ändern</button>
+          </form>
+        </article>
+
+        <article class="panel permission-card">
+          <h2>Deine Berechtigungen</h2>
+          <p>Du kannst dein Profil und deine Plattform-Links ändern.</p>
+          <p>Du kannst keine Mitglieder, Bewerbungen, Events oder Gruppeneinstellungen verwalten.</p>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <%- include("partials/footer", { data }) %>
+<script>
+(() => {
+  const preview = document.getElementById("designPreview");
+  const primary = document.getElementById("primaryColor");
+  const accent = document.getElementById("accentColor");
+  const background = document.getElementById("backgroundColor");
+  const backgroundStyle = document.getElementById("backgroundStyle");
+  const cardStyle = document.getElementById("cardStyle");
+  const themeInputs = document.querySelectorAll('input[name="profileTheme"]');
+
+  const themes = {
+    nexus: { primaryColor:"#7c5cff", accentColor:"#35e0d0", backgroundColor:"#090b16", backgroundStyle:"gradient", cardStyle:"glass" },
+    ocean: { primaryColor:"#2388ff", accentColor:"#60e6ff", backgroundColor:"#061522", backgroundStyle:"waves", cardStyle:"glass" },
+    ember: { primaryColor:"#ff6a3d", accentColor:"#ffd166", backgroundColor:"#1b0907", backgroundStyle:"glow", cardStyle:"solid" },
+    forest: { primaryColor:"#42b883", accentColor:"#b7f36b", backgroundColor:"#07140e", backgroundStyle:"aurora", cardStyle:"glass" },
+    pastel: { primaryColor:"#d98cff", accentColor:"#7ee8fa", backgroundColor:"#151020", backgroundStyle:"soft", cardStyle:"soft" },
+    monochrome: { primaryColor:"#d7d7df", accentColor:"#ffffff", backgroundColor:"#0b0b0d", backgroundStyle:"minimal", cardStyle:"solid" }
+  };
+
+  if (!preview || !primary || !accent || !background || !backgroundStyle || !cardStyle) return;
+
+  function updatePreview() {
+    preview.style.setProperty("--preview-primary", primary.value);
+    preview.style.setProperty("--preview-accent", accent.value);
+    preview.style.setProperty("--preview-bg", background.value);
+    preview.dataset.style = backgroundStyle.value;
+    preview.dataset.card = cardStyle.value;
+  }
+
+  themeInputs.forEach(input => {
+    input.addEventListener("change", () => {
+      const theme = themes[input.value];
+      if (!theme) return;
+
+      primary.value = theme.primaryColor;
+      accent.value = theme.accentColor;
+      background.value = theme.backgroundColor;
+      backgroundStyle.value = theme.backgroundStyle;
+      cardStyle.value = theme.cardStyle;
+      updatePreview();
+    });
+  });
+
+  [primary, accent, background, backgroundStyle, cardStyle].forEach(element => {
+    element.addEventListener("input", updatePreview);
+    element.addEventListener("change", updatePreview);
+  });
+
+  updatePreview();
+})();
+</script>
+<script>
+(() => {
+  document.querySelectorAll("[data-bio-field]").forEach(field => {
+    const counter = field.parentElement.querySelector("[data-bio-count]");
+    const update = () => {
+      if (counter) counter.textContent = field.value.length;
+    };
+    field.addEventListener("input", update);
+    update();
+  });
+})();
+</script>
+
+</body>
+</html>

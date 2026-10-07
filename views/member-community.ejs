@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Community-Pinnwand · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="page-hero compact-hero">
+      <span class="eyebrow">Mitgliederbereich</span>
+      <h1>Community-Pinnwand</h1>
+      <p>Ankündigungen, Ideen, Fragen, Projekte und Streamhinweise für das ganze Team.</p>
+    </section>
+
+    <section class="section community-layout">
+      <aside class="community-sidebar">
+        <section class="panel">
+          <span class="eyebrow">Neuer Beitrag</span>
+          <h2>Veröffentlichen</h2>
+          <form method="post" action="/member-area/community" class="stack">
+            <label>Kategorie
+              <select name="category">
+                <option value="idea">Idee</option>
+                <option value="question">Frage</option>
+                <option value="project">Projekt</option>
+                <option value="stream">Stream</option>
+                <option value="announcement">Ankündigung</option>
+              </select>
+            </label>
+            <label>Titel<input name="title" maxlength="120" required></label>
+            <label>Beitrag
+              <textarea name="content" rows="8" maxlength="4000" required></textarea>
+              <small class="field-help">Maximal 4.000 Zeichen.</small>
+            </label>
+            <button class="button primary" type="submit">Veröffentlichen</button>
+          </form>
+        </section>
+
+        <nav class="panel community-filter">
+          <span class="eyebrow">Filter</span>
+          <h2>Kategorien</h2>
+          <a class="<%= selectedCategory === 'all' ? 'active' : '' %>" href="/member-area/community">Alle</a>
+          <a class="<%= selectedCategory === 'announcement' ? 'active' : '' %>" href="?category=announcement">Ankündigungen</a>
+          <a class="<%= selectedCategory === 'idea' ? 'active' : '' %>" href="?category=idea">Ideen</a>
+          <a class="<%= selectedCategory === 'question' ? 'active' : '' %>" href="?category=question">Fragen</a>
+          <a class="<%= selectedCategory === 'project' ? 'active' : '' %>" href="?category=project">Projekte</a>
+          <a class="<%= selectedCategory === 'stream' ? 'active' : '' %>" href="?category=stream">Streams</a>
+        </nav>
+      </aside>
+
+      <div class="community-feed">
+        <% if (!posts.length) { %>
+          <section class="panel"><h2>Noch keine Beiträge</h2><p>Hier wartet die Pinnwand auf ihren ersten Gedankenfunken.</p></section>
+        <% } %>
+
+        <% posts.forEach(post => { %>
+          <% const mayManage = post.authorMemberId === member.id || canAdmin; %>
+          <article class="panel community-post <%= post.pinned ? 'is-pinned' : '' %>" id="<%= post.id %>">
+            <header class="community-post-header">
+              <div class="community-author">
+                <% if (post.author.avatar) { %>
+                  <img src="<%= post.author.avatar %>" alt="">
+                <% } else { %>
+                  <span class="community-avatar-fallback"><%= post.author.name.slice(0,1).toUpperCase() %></span>
+                <% } %>
+                <div>
+                  <strong><%= post.author.name %></strong>
+                  <small><%= post.author.role %> · <%= new Date(post.createdAt).toLocaleString("de-DE") %></small>
+                </div>
+              </div>
+              <span class="community-category-badge category-<%= post.category %>">
+                <%= post.category === "announcement" ? "Ankündigung" :
+                    post.category === "question" ? "Frage" :
+                    post.category === "project" ? "Projekt" :
+                    post.category === "stream" ? "Stream" : "Idee" %>
+              </span>
+            </header>
+
+            <% if (post.pinned) { %><p class="community-pinned-label">📌 Angepinnt</p><% } %>
+            <h2><%= post.title %></h2>
+            <p class="community-post-content"><%= post.content %></p>
+
+            <% if (mayManage) { %>
+              <details class="community-edit-details">
+                <summary>Beitrag verwalten</summary>
+                <form method="post" action="/member-area/community/<%= post.id %>/edit" class="stack">
+                  <label>Kategorie
+                    <select name="category">
+                      <% [["idea","Idee"],["question","Frage"],["project","Projekt"],["stream","Stream"],["announcement","Ankündigung"]].forEach(option => { %>
+                        <option value="<%= option[0] %>" <%= post.category === option[0] ? "selected" : "" %>><%= option[1] %></option>
+                      <% }) %>
+                    </select>
+                  </label>
+                  <label>Titel<input name="title" maxlength="120" value="<%= post.title %>" required></label>
+                  <label>Beitrag<textarea name="content" rows="6" maxlength="4000" required><%= post.content %></textarea></label>
+                  <button class="button small primary" type="submit">Speichern</button>
+                </form>
+                <form method="post" action="/member-area/community/<%= post.id %>/delete" onsubmit="return confirm('Beitrag und Kommentare löschen?')">
+                  <button class="button small danger" type="submit">Beitrag löschen</button>
+                </form>
+              </details>
+            <% } %>
+
+            <section class="community-comments">
+              <div class="section-head"><h3>Kommentare</h3><span><%= post.commentCount %></span></div>
+              <div class="community-comment-list">
+                <% post.comments.forEach(comment => { %>
+                  <article class="community-comment">
+                    <div><strong><%= comment.author.name %></strong><small><%= new Date(comment.createdAt).toLocaleString("de-DE") %></small></div>
+                    <p><%= comment.content %></p>
+                    <% if (comment.authorMemberId === member.id || canAdmin) { %>
+                      <form method="post" action="/member-area/community/comment/<%= comment.id %>/delete" onsubmit="return confirm('Kommentar löschen?')">
+                        <button class="text-button danger-text" type="submit">Löschen</button>
+                      </form>
+                    <% } %>
+                  </article>
+                <% }) %>
+              </div>
+              <form method="post" action="/member-area/community/<%= post.id %>/comment" class="community-comment-form">
+                <textarea name="content" rows="2" maxlength="1500" placeholder="Kommentar schreiben ..." required></textarea>
+                <button class="button small primary" type="submit">Kommentieren</button>
+              </form>
+            </section>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

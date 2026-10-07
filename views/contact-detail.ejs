@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Kontaktanfrage · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+
+  <main>
+    <div class="detail-toolbar">
+      <a class="button small" href="/admin">← Zurück zum Admin-Bereich</a>
+    </div>
+
+    <section class="page-hero compact-hero">
+      <span class="eyebrow">Kontaktanfrage</span>
+      <h1><%= contact.subject %></h1>
+      <p>
+        Von <strong><%= contact.name %></strong> ·
+        <%= new Date(contact.createdAt).toLocaleString("de-DE") %> ·
+        Status: <strong><%= contact.status %></strong>
+      </p>
+    </section>
+
+    <section class="request-detail-grid">
+      <article class="panel request-message">
+        <span class="eyebrow">Nachricht</span>
+        <div class="full-message"><%= contact.message %></div>
+      </article>
+
+      <aside class="request-sidebar">
+        <article class="panel contact-result-card">
+          <span class="eyebrow">Antwortmöglichkeit</span>
+
+          <% if ((contact.contactMethod || "email") === "discord") { %>
+            <h2>Discord-DM</h2>
+            <p><strong>Discord-Name:</strong> <%= contact.discordName || "Nicht angegeben" %></p>
+            <p><strong>Discord-ID:</strong> <code><%= contact.discordId || "Nicht angegeben" %></code></p>
+            <% if (contact.discordId) { %>
+              <button class="button small copy-contact" type="button"
+                data-copy="<%= contact.discordId %>">
+                Discord-ID kopieren
+              </button>
+            <% } %>
+          <% } else { %>
+            <h2>E-Mail</h2>
+            <p>
+              <strong>Adresse:</strong>
+              <% if (contact.email) { %>
+                <a href="mailto:<%= contact.email %>"><%= contact.email %></a>
+              <% } else { %>
+                Nicht angegeben
+              <% } %>
+            </p>
+          <% } %>
+        </article>
+
+        <article class="panel request-actions">
+          <span class="eyebrow">Verwaltung</span>
+          <h2>Status und Löschen</h2>
+
+          <div class="stack">
+            <form method="post" action="/admin/contact/<%= contact.id %>/status">
+              <input type="hidden" name="returnTo" value="detail">
+              <input type="hidden" name="status"
+                value="<%= contact.status === 'erledigt' ? 'offen' : 'erledigt' %>">
+              <button class="button primary" type="submit">
+                <%= contact.status === "erledigt"
+                  ? "Wieder als offen markieren"
+                  : "Als erledigt markieren" %>
+              </button>
+            </form>
+
+            <form method="post" action="/admin/contact/<%= contact.id %>/delete"
+              onsubmit="return confirm('Kontaktanfrage wirklich endgültig löschen?')">
+              <button class="button danger" type="submit">
+                Kontaktanfrage löschen
+              </button>
+            </form>
+          </div>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <%- include("partials/footer", { data }) %>
+
+  <script>
+    document.querySelectorAll(".copy-contact").forEach(button => {
+      button.addEventListener("click", async () => {
+        const value = button.dataset.copy;
+        try {
+          await navigator.clipboard.writeText(value);
+          const oldText = button.textContent;
+          button.textContent = "Kopiert ✓";
+          setTimeout(() => button.textContent = oldText, 1500);
+        } catch {
+          window.prompt("Discord-ID kopieren:", value);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

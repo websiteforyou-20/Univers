@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= member.name %> · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body class="member-profile-page"
+  data-style="<%= (member.profileDesign||{}).backgroundStyle||'gradient' %>"
+  data-card="<%= (member.profileDesign||{}).cardStyle||'glass' %>"
+  style="
+    --profile-primary:<%= (member.profileDesign||{}).primaryColor||'#7c5cff' %>;
+    --profile-accent:<%= (member.profileDesign||{}).accentColor||'#35e0d0' %>;
+    --profile-bg:<%= (member.profileDesign||{}).backgroundColor||'#090b16' %>;
+    <% if((member.profileDesign||{}).backgroundImage){ %>
+      --profile-image:url('<%= member.profileDesign.backgroundImage %>');
+    <% } %>
+  ">
+  <%- include("partials/header", { data }) %>
+
+  <main class="themed-profile-main"><section class="profile-banner-v8" style="<%= member.banner ? `background-image:url('${member.banner}')` : `background:linear-gradient(135deg,${member.color1},${member.color2})` %>"></section>
+    <section class="profile-layout">
+      <aside class="panel profile-sidebar">
+        <div class="avatar" style="--a:<%= member.color1 %>;--b:<%= member.color2 %>">
+          <% if (member.avatar) { %>
+            <img src="<%= member.avatar %>" alt="Avatar von <%= member.name %>">
+          <% } else { %>
+            <%= member.name.charAt(0).toUpperCase() %>
+          <% } %>
+        </div>
+        <span class="status <%= member.effectiveLive ? "live" : "" %>"><%= member.effectiveLive ? "Gerade live" : "Offline" %></span>
+        <h2><%= member.name %></h2>
+        <p><%= member.role %></p>
+      </aside>
+
+      <div>
+        <section class="panel">
+          <span class="eyebrow">Über das Mitglied</span>
+          <h1 style="font-size:clamp(2.7rem,7vw,5rem)"><%= member.twitchStream?.title || member.streamTitle || member.name %></h1>
+          <% if (member.twitchStream) { %>
+            <p class="live-detail"><strong>Jetzt live:</strong> <%= member.twitchStream.game_name || "Ohne Kategorie" %> · <%= member.twitchStream.viewer_count %> Zuschauer</p>
+          <% } %>
+          <p><%= member.bio %></p>
+          <div class="tags">
+            <% member.tags.forEach(tag => { %><span class="tag"><%= tag %></span><% }) %>
+          </div>
+        </section>
+
+        <section class="panel" style="margin-top:1rem">
+          <h2>Profilinformationen</h2>
+          <div class="info-list">
+            <% if (member.pronouns) { %>
+              <div><strong>Pronomen</strong><span><%= member.pronouns %></span></div>
+            <% } %>
+            <% if ((member.languages || []).length) { %>
+              <div><strong>Sprachen</strong><span><%= member.languages.join(", ") %></span></div>
+            <% } %>
+            <% if ((member.favoriteGames || []).length) { %>
+              <div><strong>Lieblingsspiele</strong><span><%= member.favoriteGames.join(", ") %></span></div>
+            <% } %>
+            <% if (member.artist) { %>
+              <div><strong>Artist</strong><span><%= member.artist %></span></div>
+            <% } %>
+            <% if (member.rigger) { %>
+              <div><strong>Rigger</strong><span><%= member.rigger %></span></div>
+            <% } %>
+          </div>
+        </section>
+
+        <% if ((member.clips || []).length) { %>
+          <section class="panel" style="margin-top:1rem">
+            <h2>Clips & Highlights</h2>
+            <div class="clip-list">
+              <% member.clips.forEach((clip, index) => { %>
+                <a class="clip-card" href="<%= clip %>" target="_blank" rel="noopener">
+                  <span>▶</span>
+                  <strong>Clip <%= index + 1 %></strong>
+                </a>
+              <% }) %>
+            </div>
+          </section>
+        <% } %>
+
+        <section class="panel" style="margin-top:1rem">
+          <h2>Plattformen</h2>
+          <div class="links">
+            <% if (member.twitch || member.twitchLogin) { %>
+              <a class="button primary" href="<%= member.twitch || `https://twitch.tv/${member.twitchLogin}` %>" target="_blank" rel="noopener">Twitch öffnen</a>
+            <% } %>
+            <% if (member.youtube) { %><a class="button" href="<%= member.youtube %>" target="_blank" rel="noopener">YouTube öffnen</a><% } %>
+            <% if (member.tiktok) { %><a class="button" href="<%= member.tiktok %>" target="_blank" rel="noopener">TikTok öffnen</a><% } %>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

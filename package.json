@@ -1,0 +1,30 @@
+{
+  "name": "vtuber-nexus",
+  "version": "30.1.2",
+  "private": true,
+  "description": "Produktionsbereite VTuber- und Streamer-Community-Webseite mit Rollen, SQLite, Medien, Backups und Branding-Zentrale",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "migrate": "node scripts/migrate-json-to-sqlite.js",
+    "check": "node --check server.js && node scripts/static-check.js",
+    "self-test": "node scripts/self-test.js",
+    "production-check": "node scripts/production-check.js",
+    "start:production": "node server.js",
+    "role-test": "node scripts/role-system-test.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1",
+    "helmet": "^8.1.0",
+    "express-rate-limit": "^8.0.1",
+    "session-file-store": "^1.5.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

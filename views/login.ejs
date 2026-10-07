@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin-Login · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <main>
+    <section class="panel login-box">
+      <span class="eyebrow">Geschützter Bereich</span>
+      <h2>Admin-Login</h2>
+      <p>Nur die Gruppenleitung sollte Zugriff auf diesen Bereich erhalten.</p>
+      <div class="warning-box">
+        <strong>Technischer Gründerzugang</strong>
+        <p>Dieser Login ist ausschließlich für den Gründer beziehungsweise als Notfallzugang vorgesehen. Moderatoren melden sich über den normalen Mitglieder-Login an.</p>
+      </div>
+      <% if (error) { %><p class="error"><%= error %></p><% } %>
+      <form method="post" action="/login">
+        <label>Passwort
+          <input name="password" type="password" required autofocus>
+        </label>
+        <button class="button primary" type="submit">Einloggen</button>
+        <a class="button" href="/">Zurück zur Webseite</a>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

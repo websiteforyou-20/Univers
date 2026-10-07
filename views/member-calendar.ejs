@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Teamkalender · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+
+  <main>
+    <section class="page-hero compact-hero">
+      <span class="eyebrow">Mitgliederbereich</span>
+      <h1>Teamkalender</h1>
+      <p>Hier findest du alle freigegebenen Termine und kannst direkt zusagen, absagen oder mit „Vielleicht“ antworten.</p>
+    </section>
+
+    <section class="section calendar-page">
+      <% if (!events.length) { %>
+        <div class="panel empty-state">
+          <h2>Noch keine Events</h2>
+          <p>Sobald ein Termin geplant wird, erscheint er hier.</p>
+        </div>
+      <% } %>
+
+      <div class="team-calendar-grid">
+        <% events.forEach(event => { %>
+          <article class="panel team-event-card">
+            <div class="team-event-date">
+              <strong><%= new Date(`${event.date}T00:00:00`).toLocaleDateString("de-DE", { day: "2-digit" }) %></strong>
+              <span><%= new Date(`${event.date}T00:00:00`).toLocaleDateString("de-DE", { month: "long", year: "numeric" }) %></span>
+            </div>
+
+            <div class="team-event-content">
+              <div class="section-head">
+                <div>
+                  <span class="eyebrow"><%= event.visibility === "private" ? "Privates Event" : "Team-Event" %></span>
+                  <h2><%= event.title %></h2>
+                </div>
+                <span class="event-time"><%= event.time || "Uhrzeit offen" %></span>
+              </div>
+
+              <% if (event.location) { %>
+                <p><strong>Ort:</strong> <%= event.location %></p>
+              <% } %>
+
+              <% if (event.description) { %>
+                <p class="internal-content"><%= event.description %></p>
+              <% } %>
+
+              <div class="event-response-counts">
+                <span>✅ <%= event.counts.yes %> Zusagen</span>
+                <span>🤔 <%= event.counts.maybe %> Vielleicht</span>
+                <span>❌ <%= event.counts.no %> Absagen</span>
+              </div>
+
+              <form method="post" action="/member-area/calendar/<%= event.id %>/respond" class="event-response-buttons">
+                <button class="button small <%= event.response?.status === 'yes' ? 'primary' : '' %>" name="status" value="yes">
+                  Zusagen
+                </button>
+                <button class="button small <%= event.response?.status === 'maybe' ? 'primary' : '' %>" name="status" value="maybe">
+                  Vielleicht
+                </button>
+                <button class="button small <%= event.response?.status === 'no' ? 'danger' : '' %>" name="status" value="no">
+                  Absagen
+                </button>
+              </form>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+  </main>
+
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zugriff verweigert · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="hero permission-error-card">
+      <span class="eyebrow">403 · Zugriff verweigert</span>
+      <h1>Für diese Tür fehlt dir die passende Schlüsselkarte.</h1>
+      <p><%= message %></p>
+
+      <div class="permission-details">
+        <span><strong>Benötigt:</strong> <%= typeof requiredRole !== "undefined" ? requiredRole : "besondere Berechtigung" %></span>
+        <span><strong>Deine Rolle:</strong> <%= typeof currentRole !== "undefined" ? currentRole : "unbekannt" %></span>
+      </div>
+
+      <div class="actions">
+        <a class="button primary" href="/member-area">Zum Mitgliederbereich</a>
+        <a class="button" href="/">Zur Startseite</a>
+        <% if (typeof currentMember !== "undefined" && currentMember) { %>
+          <a class="button" href="/owner-recovery">Gründerzugang reparieren</a>
+        <% } %>
+      </div>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">Gemeinsame Aktionen</span>
+      <h1>Events</h1>
+      <p>Kollaborationen, Community-Abende und besondere Gruppenprojekte.</p>
+    </section>
+
+    <section class="section">
+      <% if (events.length === 0) { %>
+        <div class="panel empty-state">
+          <h2>Noch keine Events geplant.</h2>
+          <p>Neue Termine können im Admin-Bereich erstellt werden.</p>
+        </div>
+      <% } else { %>
+        <div class="event-grid">
+          <% events.forEach(event => { %>
+            <article class="card event-card">
+              <span class="event-date"><%= event.date %> · <%= event.time %></span>
+              <h2><%= event.title %></h2>
+              <p><%= event.description %></p>
+              <p><strong><%= (event.registrations || []).filter(item => item.status !== "abgesagt").length %></strong> Anmeldungen</p>
+              <div class="actions">
+                <a class="button small primary" href="/events/<%= event.id %>">Event öffnen</a>
+                <a class="button small" href="/events/<%= event.id %>/calendar.ics">Zum Kalender hinzufügen</a>
+              </div>
+
+              <details class="registration-box">
+                <summary>Für dieses Event anmelden</summary>
+                <form method="post" action="/events/<%= event.id %>/register">
+                  <label>Name
+                    <input name="name" required maxlength="100">
+                  </label>
+                  <label>E-Mail
+                    <input name="email" type="email" required maxlength="200">
+                  </label>
+                  <label>Nachricht, freiwillig
+                    <textarea name="note" rows="3" maxlength="1000"></textarea>
+                  </label>
+                  <button class="button primary" type="submit">Teilnahme anmelden</button>
+                </form>
+              </details>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

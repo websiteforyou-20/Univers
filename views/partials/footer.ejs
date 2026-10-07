@@ -1,0 +1,171 @@
+<footer class="site-footer">
+  <div>
+    <strong><%= data.group.branding?.footerName || data.group.name %></strong>
+    <p><%= data.group.branding?.subtitle || "Unabhängige VTuber- und Streamer-Community" %></p>
+  </div>
+  <nav>
+    <a href="/kontakt">Kontakt</a>
+    <a href="/impressum">Impressum</a>
+    <a href="/datenschutz">Datenschutz</a>
+  </nav>
+</footer>
+
+<%
+  const footerSiteAnimations =
+    data && data.group && data.group.siteAnimations
+      ? data.group.siteAnimations
+      : {
+          enabled: true,
+          type: "fade-up",
+          speed: "normal",
+          intensity: 100,
+          trigger: "viewport",
+          stagger: true,
+          hoverEffects: true
+        };
+%>
+
+<script>
+(() => {
+  const settings = <%- JSON.stringify(footerSiteAnimations) %>;
+
+  if (!settings.enabled) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const selectors = [
+    ".page-hero",
+    ".hero",
+    ".panel",
+    ".member-card",
+    ".application-card",
+    ".contact-card",
+    ".dashboard-card",
+    ".stat-card",
+    ".news-card",
+    ".event-card"
+  ];
+
+  const elements = [...document.querySelectorAll(selectors.join(","))]
+    .filter((element, index, all) => all.indexOf(element) === index)
+    .filter(element => !element.closest("[data-animation-ignore]"));
+
+  function initialTransform(type, intensity) {
+    const move = Math.round(28 * intensity);
+    const zoom = 1 - (0.08 * intensity);
+
+    switch (type) {
+      case "fade":
+        return "none";
+      case "slide-left":
+        return `translateX(-${move}px)`;
+      case "slide-right":
+        return `translateX(${move}px)`;
+      case "zoom":
+        return `scale(${Math.max(.85, zoom)})`;
+      case "float":
+        return `translateY(${Math.round(18 * intensity)}px) scale(.98)`;
+      case "fade-up":
+      default:
+        return `translateY(${move}px)`;
+    }
+  }
+
+  const duration =
+    settings.speed === "slow" ? 1000 :
+    settings.speed === "fast" ? 350 :
+    650;
+
+  const intensity = Number(settings.intensity || 100) / 100;
+
+  elements.forEach((element, index) => {
+    element.dataset.siteAnimate = settings.type;
+    element.style.opacity = "0";
+    element.style.transform = initialTransform(settings.type, intensity);
+    element.style.transition =
+      `opacity ${duration}ms ease, transform ${duration}ms cubic-bezier(.2,.7,.2,1)`;
+    element.style.transitionDelay =
+      settings.stagger ? `${Math.min(index * 55, 550)}ms` : "0ms";
+  });
+
+  function reveal(element) {
+    element.style.opacity = "1";
+    element.style.transform = "none";
+
+    if (settings.type === "float") {
+      setTimeout(() => {
+        element.classList.add("site-float-active");
+      }, duration);
+    }
+  }
+
+  if (settings.trigger === "load") {
+    requestAnimationFrame(() => elements.forEach(reveal));
+    return;
+  }
+
+  if (!("IntersectionObserver" in window)) {
+    elements.forEach(reveal);
+    return;
+  }
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      reveal(entry.target);
+      observer.unobserve(entry.target);
+    });
+  }, {
+    threshold: .12,
+    rootMargin: "0px 0px -5% 0px"
+  });
+
+  elements.forEach(element => observer.observe(element));
+})();
+</script>
+
+<script>
+  document.addEventListener("submit", event => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) return;
+    if (event.defaultPrevented) return;
+    if (form.dataset.allowMultipleSubmit === "true") return;
+
+    const submitButtons = form.querySelectorAll(
+      'button[type="submit"], input[type="submit"]'
+    );
+
+    submitButtons.forEach(button => {
+      if (button.disabled) return;
+
+      button.dataset.originalText =
+        button.tagName === "INPUT" ? button.value : button.textContent;
+
+      if (button.tagName === "INPUT") {
+        button.value = "Wird verarbeitet…";
+      } else {
+        button.textContent = "Wird verarbeitet…";
+      }
+
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+    });
+
+    form.classList.add("is-submitting");
+  });
+
+  window.addEventListener("pageshow", () => {
+    document.querySelectorAll("form.is-submitting").forEach(form => {
+      form.classList.remove("is-submitting");
+      form.querySelectorAll('[aria-busy="true"]').forEach(button => {
+        const original = button.dataset.originalText;
+        if (button.tagName === "INPUT") {
+          if (original) button.value = original;
+        } else if (original) {
+          button.textContent = original;
+        }
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+      });
+    });
+  });
+</script>

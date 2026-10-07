@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suche · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">Nexus-Suche</span>
+      <h1>Suche</h1>
+      <form class="big-search" method="get" action="/search">
+        <input name="q" value="<%= query %>" type="search" placeholder="Mitglieder, News oder Events suchen" autofocus>
+        <button class="button primary" type="submit">Suchen</button>
+      </form>
+    </section>
+
+    <% if (query) { %>
+      <section class="search-results">
+        <article class="panel">
+          <h2>Mitglieder <span class="result-count"><%= members.length %></span></h2>
+          <div class="result-list">
+            <% members.forEach(member => { %>
+              <a class="result-item" href="/member/<%= member.id %>">
+                <strong><%= member.name %></strong>
+                <span><%= member.streamTitle || member.role %></span>
+              </a>
+            <% }) %>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>News <span class="result-count"><%= news.length %></span></h2>
+          <div class="result-list">
+            <% news.forEach(article => { %>
+              <a class="result-item" href="/news/<%= article.id %>">
+                <strong><%= article.title %></strong>
+                <span><%= article.summary || article.content.slice(0, 100) %></span>
+              </a>
+            <% }) %>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>Events <span class="result-count"><%= events.length %></span></h2>
+          <div class="result-list">
+            <% events.forEach(event => { %>
+              <a class="result-item" href="/events/<%= event.id %>">
+                <strong><%= event.title %></strong>
+                <span><%= event.date %> · <%= event.time %></span>
+              </a>
+            <% }) %>
+          </div>
+        </article>
+      </section>
+    <% } %>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mitglieder-Login · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="panel login-box">
+      <span class="eyebrow">Eigene Profilverwaltung</span>
+      <h2>Mitglieder-Login</h2>
+      <p>Mitglieder können hier ihr eigenes Profil, ihre Links, Streamzeiten und Bilder verwalten.</p>
+      <div class="info-box">
+        <strong>Nur dein eigenes Konto verwenden</strong>
+        <p>Der Benutzername bestimmt, welches Mitgliederprofil geöffnet wird. Melde dich ausschließlich mit deinen eigenen Zugangsdaten an.</p>
+        <p>Noch keinen Zugang oder Passwort vergessen? Wende dich an die Gruppenleitung.</p>
+      </div>
+
+      <% if (error) { %><p class="error"><%= error %></p><% } %>
+
+      <% if (typeof loggedOut !== "undefined" && loggedOut) { %>
+        <p class="success-message">Du wurdest erfolgreich abgemeldet.</p>
+      <% } %>
+
+      <form method="post" action="/member-login">
+        <% if (typeof query !== "undefined" && query.returnTo) { %>
+          <input type="hidden" name="returnTo" value="<%= query.returnTo %>">
+        <% } %>
+        <label>Benutzername
+          <input name="username" required autocomplete="username">
+        </label>
+        <label>Passwort
+          <input name="password" type="password" required autocomplete="current-password">
+        </label>
+        <button class="button primary" type="submit">Einloggen</button>
+        <a class="button" href="/">Zurück zur Webseite</a>
+      </form>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

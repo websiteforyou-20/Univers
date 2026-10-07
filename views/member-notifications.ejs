@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Benachrichtigungen · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+
+  <main>
+    <section class="page-hero compact-hero">
+      <span class="eyebrow">Mitgliederbereich</span>
+      <h1>Benachrichtigungen</h1>
+      <p>Hier findest du Hinweise zu deinem Profil, Events und deiner Community.</p>
+
+      <form method="post" action="/member-area/notifications/read-all">
+        <button class="button" type="submit">Alle als gelesen markieren</button>
+      </form>
+    </section>
+
+    <section class="notification-list section">
+      <% if (!notifications.length) { %>
+        <div class="panel empty-state">
+          <h2>Noch keine Meldungen</h2>
+          <p>Sobald etwas Neues passiert, erscheint es hier.</p>
+        </div>
+      <% } %>
+
+      <% notifications.forEach(notification => { 
+        const isRead = (notification.readBy || []).includes(member.id);
+      %>
+        <article class="panel notification-card <%= isRead ? 'is-read' : 'is-unread' %>">
+          <div class="notification-icon" aria-hidden="true">
+            <%= notification.type === "event" ? "📅"
+              : notification.type === "profile" ? "👤"
+              : notification.type === "welcome" ? "✨"
+              : "🔔" %>
+          </div>
+
+          <div class="notification-content">
+            <div class="notification-head">
+              <h2><%= notification.title %></h2>
+              <small><%= new Date(notification.createdAt).toLocaleString("de-DE") %></small>
+            </div>
+            <p><%= notification.message %></p>
+
+            <form method="post" action="/member-area/notifications/<%= notification.id %>/read">
+              <button class="button small <%= isRead ? '' : 'primary' %>" type="submit">
+                <%= notification.link
+                  ? (isRead ? "Öffnen" : "Lesen und öffnen")
+                  : (isRead ? "Gelesen" : "Als gelesen markieren") %>
+              </button>
+            </form>
+          </div>
+        </article>
+      <% }) %>
+    </section>
+  </main>
+
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

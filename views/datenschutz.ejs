@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Datenschutz · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">Datenschutz</span>
+      <h1>Datenschutzerklärung</h1>
+      <p class="warning-box">Vorlage: Diese Erklärung muss vor Veröffentlichung an Hosting, Cookies, eingebundene Dienste und tatsächliche Datenverarbeitung angepasst werden.</p>
+    </section>
+    <section class="panel legal-page">
+      <h2>Verantwortliche Stelle</h2>
+      <p><%= data.legal.privacyContact %></p>
+      <h2>Server- und Zugriffsdaten</h2>
+      <p>Beim Betrieb einer öffentlichen Webseite können technische Zugriffsdaten wie IP-Adresse, Zeitpunkt, Browsertyp und aufgerufene Seite verarbeitet werden. Die genaue Verarbeitung hängt vom späteren Hosting-Anbieter ab.</p>
+      <h2>Kontaktformular</h2>
+      <p>Übermittelte Namen, E-Mail-Adressen, Betreffzeilen und Nachrichten werden gespeichert, um Anfragen zu bearbeiten.</p>
+      <h2>Bewerbungen</h2>
+      <p>Bewerbungsdaten können Kanalname, Plattform, Kanal-Link, Discord-Name, Freitext und freiwillig hochgeladene Bilder enthalten. Sie werden zur Prüfung einer möglichen Mitgliedschaft verarbeitet.</p>
+      <h2>Twitch-Schnittstelle</h2>
+      <p>Die Webseite kann öffentliche Twitch-Streamdaten wie Live-Status, Streamtitel, Kategorie, Zuschauerzahl und Vorschaubilder abrufen.</p>
+      <h2>Löschung</h2>
+      <p>Kontakt- und Bewerbungsdaten können im geschützten Admin-Bereich gelöscht werden.</p>
+    </section>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= article.title %> · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+  <main>
+    <article class="panel article-page">
+      <span class="eyebrow">Ankündigung</span>
+      <h1><%= article.title %></h1>
+      <div class="news-meta">
+        <%= new Date(article.createdAt).toLocaleString("de-DE") %> · <%= article.author %>
+      </div>
+      <% if (article.summary) { %><p class="article-lead"><%= article.summary %></p><% } %>
+      <div class="article-content"><%= article.content %></div>
+      <a class="button" href="/news">Zurück zu den News</a>
+    </article>
+  </main>
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

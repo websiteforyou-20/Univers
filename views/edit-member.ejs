@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= member.name %> bearbeiten · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/admin"><span class="mark"><%= data.group.branding?.adminAbbreviation || data.group.branding?.abbreviation || "VN" %></span><span>Mitglied bearbeiten</span></a>
+    <nav><a href="/admin">Zurück zum Admin-Bereich</a></nav>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <span class="eyebrow">Mitgliederverwaltung</span>
+      <h1><%= member.name %></h1>
+      <p>Hier kannst du das vollständige Profil bearbeiten.</p>
+      <div class="info-box">
+        <strong>Sofort öffentlich</strong>
+        <p>Änderungen an Profilinformationen erscheinen direkt auf dem öffentlichen Profil. Rollen und Kontozugänge können ausschließlich vom Gründer geändert werden.</p>
+      </div>
+    </section>
+
+    <section class="panel edit-panel">
+      <form method="post" action="/admin/member/<%= member.id %>/edit" enctype="multipart/form-data">
+        <div class="row">
+          <label>Name
+            <input name="name" value="<%= member.name %>" required>
+          </label>
+          <% if (isFounder) { %>
+            <label>Rolle
+              <select name="roleId" required>
+                <% (roles || data.roles || []).forEach(role => { %>
+                  <option value="<%= role.id %>" <%= (member.roleId || "member") === role.id ? "selected" : "" %>><%= role.name %></option>
+                <% }) %>
+              </select>
+              <small class="field-help">Die Rechte dieser Rolle werden im Admin-Bereich unter „Rollen“ festgelegt.</small>
+            </label>
+          <% } else { %>
+            <label>Rolle
+              <input value="<%= member.role %>" disabled>
+              <input name="roleId" type="hidden" value="<%= member.roleId || 'member' %>">
+            </label>
+          <% } %>
+        </div>
+
+        <% if (isFounder) { %>
+          <div class="role-explanation">
+            <strong>Rollen und Rechte</strong>
+            <p><b>Gründer:</b> besitzt immer alle Rechte und ist geschützt.</p>
+            <p><b>Alle anderen Rollen:</b> verwenden genau die Häkchen aus „Admin → Rollen & Rechte“.</p>
+            <p class="warning-text">Rollen erstellen, verändern und zuweisen kann ausschließlich der Gründer.</p>
+          </div>
+        <% } %>
+
+        <label>Stream-Titel
+          <input name="streamTitle" value="<%= member.streamTitle || "" %>">
+        </label>
+
+        <label>Beschreibung
+          <textarea name="bio" rows="6" maxlength="200" data-bio-field required><%= member.bio || "" %></textarea>
+          <small class="field-help"><span data-bio-count>0</span>/200 Zeichen</small>
+        </label>
+
+        <label>Tags, durch Komma getrennt
+          <input name="tags" value="<%= (member.tags || []).join(", ") %>">
+          <small class="field-help">Beispiel: Minecraft, Deutsch, Strategie. Diese Angaben werden für Suche und Filter verwendet.</small>
+        </label>
+
+        <label>Streamzeiten, durch Komma getrennt
+          <input name="schedule" value="<%= (member.schedule || []).join(", ") %>">
+          <small class="field-help">Beispiel: Dienstag 20:00, Freitag 21:00. Keine automatische Übertragung zu Twitch.</small>
+        </label>
+
+        <div class="row">
+          <label>Twitch-Kanalname
+            <input name="twitchLogin" value="<%= member.twitchLogin || "" %>" placeholder="jokoder">
+            <small class="field-help">Nur den Kanalnamen eintragen, nicht die vollständige Twitch-Adresse.</small>
+          </label>
+          <label>Twitch-Link
+            <input name="twitch" type="url" value="<%= member.twitch || "" %>">
+          </label>
+        </div>
+        <div class="row">
+          <label>YouTube
+            <input name="youtube" type="url" value="<%= member.youtube || "" %>">
+          </label>
+        </div>
+
+        <label>TikTok
+          <input name="tiktok" type="url" value="<%= member.tiktok || "" %>">
+        </label>
+
+        <div class="row">
+          <label>Farbe 1
+            <input name="color1" type="color" value="<%= member.color1 || "#9b6cff" %>">
+          </label>
+          <label>Farbe 2
+            <input name="color2" type="color" value="<%= member.color2 || "#36d9c4" %>">
+          </label>
+        </div>
+
+        <label>Neues Avatar-Bild, optional
+          <input name="avatar" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+        </label>
+        <label>Neues Bannerbild, optional<input name="banner" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+        <div class="row"><label>Pronomen<input name="pronouns" value="<%= member.pronouns || "" %>"></label><label>Sprachen<input name="languages" value="<%= (member.languages || []).join(", ") %>"></label></div>
+        <label>Lieblingsspiele<input name="favoriteGames" value="<%= (member.favoriteGames || []).join(", ") %>"></label>
+        <div class="row"><label>Debüt<input name="debutDate" type="date" value="<%= member.debutDate || "" %>"></label><label>Discord<input name="discord" value="<%= member.discord || "" %>"></label></div>
+        <div class="row"><label>Model-Artist<input name="artist" value="<%= member.artist || "" %>"></label><label>Rigger<input name="rigger" value="<%= member.rigger || "" %>"></label></div>
+        <label>Clip-Links, durch Komma getrennt<input name="clips" value="<%= (member.clips || []).join(", ") %>"></label>
+
+        <label style="display:flex;grid-template-columns:auto 1fr;align-items:center">
+          <input name="live" type="checkbox" style="width:auto" <%= member.live ? "checked" : "" %>>
+          Mitglied ist gerade live
+        </label>
+
+        <div class="actions">
+          <button class="button primary" type="submit">Änderungen speichern</button>
+          <a class="button" href="/admin">Abbrechen</a>
+        </div>
+      </form>
+    </section>
+  
+    <% if (canPermission("member_accounts.manage")) { %>
+    <section class="panel edit-panel member-account-panel">
+      <span class="eyebrow">Mitgliederzugang</span>
+      <h2>Login für <%= member.name %></h2>
+      <p>Hier verwaltest du den persönlichen Login des Mitglieds. Welche Admin-Funktionen verfügbar sind, bestimmt die zugewiesene Rolle.</p>
+
+      <form method="post" action="/admin/member/<%= member.id %>/account">
+        <label>Benutzername
+          <input name="username" value="<%= member.account?.username || "" %>" autocomplete="off">
+        </label>
+
+        <label>Neues oder erstes Passwort
+          <input name="password" type="password" minlength="10" autocomplete="new-password" placeholder="Leer lassen, um das Passwort nicht zu ändern">
+        </label>
+
+        <label class="checkbox-label">
+          <input name="enabled" type="checkbox" <%= member.account?.enabled ? "checked" : "" %>>
+          Mitgliederzugang aktivieren
+        </label>
+
+        <button class="button primary" type="submit">Zugang speichern</button>
+      </form>
+    </section>
+    <% } %>
+
+  </main>
+
+<script>
+(() => {
+  document.querySelectorAll("[data-bio-field]").forEach(field => {
+    const counter = field.parentElement.querySelector("[data-bio-count]");
+    const update = () => {
+      if (counter) counter.textContent = field.value.length;
+    };
+    field.addEventListener("input", update);
+    update();
+  });
+})();
+</script>
+
+</body>
+</html>

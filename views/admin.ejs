@@ -1,0 +1,2474 @@
+<%
+  const roleCan = permission =>
+    access.isFounder || (access.permissions || []).includes(permission) || (access.permissions || []).includes("*");
+%>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+
+  <style>
+    /* Version 29.5: Seitenleiste auch bei Browser-Zoom */
+    @media (min-width: 760px) {
+      body.admin-page main {
+        display: block !important;
+        position: relative !important;
+        width: calc(100% - 24px) !important;
+        max-width: 1600px !important;
+        margin: 0 auto !important;
+        padding: 0 18px 70px 292px !important;
+        box-sizing: border-box !important;
+      }
+
+      body.admin-page .admin-side-nav {
+        display: block !important;
+        position: fixed !important;
+        top: 92px !important;
+        left: 18px !important;
+        width: 250px !important;
+        max-height: calc(100vh - 112px) !important;
+        margin: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        z-index: 999 !important;
+      }
+
+      body.admin-page .admin-side-nav-inner {
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+
+      body.admin-page .admin-side-nav nav {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+        overflow: visible !important;
+      }
+
+      body.admin-page .admin-side-nav a {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        white-space: normal !important;
+      }
+
+      body.admin-page .admin-content-column {
+        width: 100% !important;
+        min-width: 0 !important;
+      }
+    }
+
+    @media (max-width: 759px) {
+      body.admin-page main {
+        display: block !important;
+        padding: 0 12px 60px !important;
+      }
+
+      body.admin-page .admin-side-nav {
+        position: sticky !important;
+        top: 8px !important;
+        width: 100% !important;
+        margin-bottom: 16px !important;
+        z-index: 999 !important;
+      }
+
+      body.admin-page .admin-side-nav nav {
+        display: flex !important;
+        gap: 8px !important;
+        overflow-x: auto !important;
+      }
+
+      body.admin-page .admin-side-nav a {
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+      }
+    }
+  </style>
+
+
+  <style id="role-permission-visibility">
+    <% if (!roleCan("communications.manage")) { %>#interne-kommunikation{display:none!important}<% } %>
+    <% if (!roleCan("group.manage")) { %>#gruppen-inhalte{display:none!important}<% } %>
+    <% if (!roleCan("members.manage")) { %>#mitglied-anlegen,#mitgliederverwaltung{display:none!important}<% } %>
+    <% if (!roleCan("events.manage")) { %>#teamkalender,#eventsverwaltung,#eventanmeldungen{display:none!important}<% } %>
+    <% if (!roleCan("community.manage")) { %>#community-moderation{display:none!important}<% } %>
+    <% if (!roleCan("projects.manage")) { %>#projektverwaltung{display:none!important}<% } %>
+    <% if (!roleCan("media.manage")) { %>#medienverwaltung{display:none!important}<% } %>
+    <% if (!roleCan("polls.manage")) { %>#abstimmungen{display:none!important}<% } %>
+    <% if (!roleCan("requests.manage")) { %>#bewerbungenverwaltung,#kontaktanfragen{display:none!important}<% } %>
+    <% if (!roleCan("news.manage")) { %>#newsverwaltung{display:none!important}<% } %>
+    <% if (!roleCan("security.manage")) { %>#json-backups{display:none!important}<% } %>
+    <% if (!roleCan("legal.manage")) { %>#rechtliches{display:none!important}<% } %>
+  </style>
+
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body class="admin-page">
+  <header>
+    <a class="brand" href="/">
+      <span class="mark"><%= data.group.branding?.adminAbbreviation || data.group.branding?.abbreviation || "VN" %></span>
+      <span><%= data.group.branding?.adminName || "Admin" %></span>
+    </a>
+    <nav>
+      <a href="/">Webseite ansehen</a>
+      <form method="post" action="/logout"><button type="submit">Abmelden</button></form>
+    </nav>
+  </header>
+
+  <main>
+
+    <aside class="admin-side-nav" aria-label="Schnellnavigation im Admin-Bereich">
+      <div class="admin-side-nav-inner">
+        <span class="eyebrow">Schnellnavigation</span>
+        <strong>Direkt zum Bereich</strong>
+        <nav>
+          <a href="#admin-uebersicht">Übersicht</a>
+          <% if (roleCan("communications.manage")) { %><a href="#interne-kommunikation">Nachrichten & Aufgaben</a><% } %>
+          <% if (access.isFounder) { %><a href="#rollenverwaltung">Rollen</a><% } %>
+          <% if (roleCan("branding.manage")) { %><a href="#branding-zentrale">Branding</a><% } %>
+          <% if (roleCan("group.manage")) { %><a href="#gruppen-inhalte">Gruppe</a><% } %>
+          <% if (roleCan("members.manage")) { %><a href="#mitgliederverwaltung">Mitglieder</a><% } %>
+          <% if (roleCan("appearance.manage")) { %><a href="#website-hintergrund">Hintergrund</a><a href="#header-design">Kopfzeile</a><a href="#design-studio">Design</a><% } %>
+          <% if (roleCan("animations.manage")) { %><a href="#animations-studio">Animationen</a><% } %>
+          <% if (roleCan("events.manage")) { %><a href="#teamkalender">Kalender</a><a href="#eventsverwaltung">Events</a><% } %>
+          <% if (roleCan("community.manage")) { %><a href="#community-moderation">Pinnwand</a><% } %>
+          <% if (roleCan("projects.manage")) { %><a href="#projektverwaltung">Projekte</a><% } %>
+          <% if (roleCan("media.manage")) { %><a href="#medienverwaltung">Medien</a><% } %>
+          <% if (roleCan("polls.manage")) { %><a href="#abstimmungen">Abstimmungen</a><% } %>
+          <% if (roleCan("requests.manage")) { %><a href="#bewerbungenverwaltung">Bewerbungen & Kontakt</a><% } %>
+          <% if (roleCan("news.manage")) { %><a href="#newsverwaltung">News</a><% } %>
+          <% if (roleCan("security.manage")) { %><a href="#systempruefung">Systemprüfung</a><a href="#sicherheit-backups">Sicherheit & Backups</a><% } %>
+          <% if (roleCan("legal.manage")) { %><a href="#rechtliches">Rechtliches</a><% } %>
+        </nav>
+      </div>
+    </aside>
+
+    <div class="admin-content-column">
+    <section class="panel internal-admin" id="interne-kommunikation">
+      <span class="eyebrow">Teamverwaltung</span>
+      <h2>Interne Nachrichten und Aufgaben</h2>
+      <div class="admin-grid">
+        <div>
+          <h3>Nachricht senden</h3>
+          <form method="post" action="/admin/internal-message" class="stack">
+            <label>Mitglied<select name="targetMemberId" required><option value="">Bitte auswählen</option><% data.members.forEach(member => { %><option value="<%= member.id %>"><%= member.name %></option><% }) %></select></label>
+            <label>Titel<input name="title" maxlength="100" required></label>
+            <label>Nachricht<textarea name="content" rows="6" maxlength="2000" required></textarea></label>
+            <button class="button primary">Nachricht senden</button>
+          </form>
+        </div>
+        <div>
+          <h3>Aufgabe erstellen</h3>
+          <form method="post" action="/admin/member-task" class="stack">
+            <label>Mitglied<select name="targetMemberId" required><option value="">Bitte auswählen</option><% data.members.forEach(member => { %><option value="<%= member.id %>"><%= member.name %></option><% }) %></select></label>
+            <label>Titel<input name="title" maxlength="100" required></label>
+            <label>Beschreibung<textarea name="description" rows="5" maxlength="2000"></textarea></label>
+            <label>Frist<input name="dueDate" type="date"></label>
+            <button class="button primary">Aufgabe erstellen</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="internal-admin-lists">
+        <div>
+          <h3>Letzte Nachrichten</h3>
+          <% [...(data.internalMessages || [])].reverse().slice(0, 8).forEach(item => { const target = data.members.find(member => member.id === item.targetMemberId); %>
+            <article class="internal-admin-item">
+              <div><strong><%= item.title %></strong><small>An <%= target?.name || "Gelöschtes Mitglied" %> · <%= item.readAt ? "gelesen" : "ungelesen" %></small></div>
+              <form method="post" action="/admin/internal-message/<%= item.id %>/delete"><button class="button danger small">Löschen</button></form>
+            </article>
+          <% }) %>
+        </div>
+        <div>
+          <h3>Letzte Aufgaben</h3>
+          <% [...(data.memberTasks || [])].reverse().slice(0, 8).forEach(item => { const target = data.members.find(member => member.id === item.targetMemberId); %>
+            <article class="internal-admin-item">
+              <div><strong><%= item.title %></strong><small>Für <%= target?.name || "Gelöschtes Mitglied" %> · <%= item.status %></small></div>
+              <form method="post" action="/admin/member-task/<%= item.id %>/delete"><button class="button danger small">Löschen</button></form>
+            </article>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+
+<section class="section" id="admin-uebersicht">
+      <span class="eyebrow">Geschützter Verwaltungsbereich</span>
+      <h1 style="font-size:clamp(3rem,7vw,5.5rem)">Nexus-Zentrale</h1>
+      <p class="notice">
+        Angemeldet als
+        <strong class="role-inline-badge" style="--role-color:<%= access.roleColor || '#9b6cff' %>">
+          <%= access.roleName || access.role %>
+        </strong>.
+        <%= access.isFounder
+          ? "Du hast vollständigen Zugriff."
+          : "Du siehst und verwendest nur die Bereiche, die für deine Rolle freigeschaltet wurden." %>
+      </p>
+    </section>
+
+
+    <section class="panel database-status">
+      <span class="eyebrow">Speicherung</span>
+      <h2>SQLite aktiv</h2>
+      <p>Mitglieder, Bewerbungen, Events, News und Einstellungen werden transaktionssicher in <code>data/nexus.db</code> gespeichert.</p>
+      <div class="actions">
+        <a class="button" href="/admin/backup">JSON-Backup herunterladen</a>
+        <a class="button" href="/health" target="_blank" rel="noopener">Serverstatus öffnen</a>
+      </div>
+    </section>
+
+    
+    <% if (roleCan("appearance.manage")) { %>
+      <% const siteBg = data.group.siteBackground || {
+        mode: "gradient",
+        color1: "#090b16",
+        color2: "#10232d",
+        image: "",
+        overlay: 82,
+        fixed: true
+      }; %>
+
+      <section class="panel site-background-admin" id="website-hintergrund">
+        <span class="eyebrow">Erscheinungsbild</span>
+        <h2>Website-Hintergrund</h2>
+        <p>Hier änderst du den Hintergrund der gesamten Webseite. Mitgliederprofile behalten zusätzlich ihr eigenes Profil-Design.</p>
+
+        <div class="site-background-preview"
+          data-mode="<%= siteBg.mode %>"
+          style="
+            --bg-one:<%= siteBg.color1 %>;
+            --bg-two:<%= siteBg.color2 %>;
+            --bg-overlay:<%= Number(siteBg.overlay ?? 82) / 100 %>;
+            <% if (siteBg.image) { %>--bg-image:url('<%= siteBg.image %>');<% } %>
+          ">
+          <div>
+            <strong><%= data.group.name %></strong>
+            <small>Vorschau des Website-Hintergrunds</small>
+          </div>
+        </div>
+
+        <form method="post" action="/admin/site-background"
+          enctype="multipart/form-data" class="stack">
+
+          <div class="form-grid">
+            <label>Hintergrundart
+              <select name="mode" id="siteBackgroundMode">
+                <option value="solid" <%= siteBg.mode === "solid" ? "selected" : "" %>>Einfarbig</option>
+                <option value="gradient" <%= siteBg.mode === "gradient" ? "selected" : "" %>>Farbverlauf</option>
+                <option value="image" <%= siteBg.mode === "image" ? "selected" : "" %>>Eigenes Bild</option>
+              </select>
+            </label>
+
+            <label>Hauptfarbe
+              <input name="color1" id="siteBgColor1" type="color"
+                value="<%= siteBg.color1 %>">
+            </label>
+
+            <label>Zweite Farbe
+              <input name="color2" id="siteBgColor2" type="color"
+                value="<%= siteBg.color2 %>">
+            </label>
+
+            <label>Bild abdunkeln
+              <input name="overlay" id="siteBgOverlay" type="range"
+                min="0" max="95" value="<%= siteBg.overlay ?? 82 %>">
+              <small class="field-help">
+                Aktuell: <strong id="overlayValue"><%= siteBg.overlay ?? 82 %>%</strong>
+              </small>
+            </label>
+
+            <label>Neues Hintergrundbild
+              <input name="siteBackgroundImage" type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif">
+              <small class="field-help">Empfohlen: mindestens 1920 × 1080 Pixel.</small>
+            </label>
+
+            <label class="checkbox-line">
+              <input name="fixed" type="checkbox"
+                <%= siteBg.fixed === false ? "" : "checked" %>>
+              Hintergrund beim Scrollen festhalten
+            </label>
+          </div>
+
+          <button class="button primary" type="submit">
+            Website-Hintergrund speichern
+          </button>
+        </form>
+
+        <form method="post" action="/admin/site-background/reset"
+          onsubmit="return confirm('Website-Hintergrund auf Standard zurücksetzen?')">
+          <button class="button" type="submit">Auf Standard zurücksetzen</button>
+        </form>
+      </section>
+    <% } %>
+
+
+
+
+    <% if (roleCan("branding.manage")) { %>
+      <% const brand = data.group.branding || {
+        siteName: data.group.name || "VTuber Nexus",
+        subtitle: "Community Hub",
+        abbreviation: "VN",
+        browserTitle: data.group.name || "VTuber Nexus",
+        adminName: "Admin",
+        adminAbbreviation: "VN",
+        footerName: data.group.name || "VTuber Nexus",
+        logo: data.group.logo || "",
+        favicon: "",
+        socialImage: ""
+      }; %>
+
+      <section class="panel branding-admin" id="branding-zentrale">
+        <span class="eyebrow">Komplette Identität</span>
+        <h2>Branding-Zentrale</h2>
+        <p>
+          Name, Kürzel, Logo, Browser-Tab und weitere sichtbare
+          Markenangaben werden hier zentral verwaltet.
+        </p>
+
+        <% if (query.branding === "saved") { %>
+          <p class="success-message">Das Branding wurde gespeichert.</p>
+        <% } else if (query.branding === "reset") { %>
+          <p class="success-message">
+            Untertitel, Kürzel und Zusatzangaben wurden neu aus dem aktuellen Namen erstellt.
+          </p>
+        <% } %>
+
+        <div class="branding-preview" id="brandingPreview">
+          <div class="branding-preview-header">
+            <div class="branding-preview-identity">
+              <span class="branding-preview-logo" id="brandingPreviewLogo">
+                <% if (brand.logo) { %>
+                  <img src="<%= brand.logo %>" alt="">
+                <% } else { %>
+                  <span id="brandingPreviewAbbreviation"><%= brand.abbreviation %></span>
+                <% } %>
+              </span>
+
+              <div>
+                <strong id="brandingPreviewName"><%= brand.siteName %></strong>
+                <small id="brandingPreviewSubtitle"><%= brand.subtitle %></small>
+              </div>
+            </div>
+
+            <div class="branding-preview-admin">
+              <span id="brandingPreviewAdminMark"><%= brand.adminAbbreviation %></span>
+              <strong id="brandingPreviewAdminName"><%= brand.adminName %></strong>
+            </div>
+          </div>
+
+          <div class="branding-preview-browser">
+            <span class="branding-preview-favicon" id="brandingPreviewFavicon">
+              <% if (brand.favicon) { %>
+                <img src="<%= brand.favicon %>" alt="">
+              <% } else { %>
+                <%= brand.abbreviation %>
+              <% } %>
+            </span>
+            <span id="brandingPreviewBrowserTitle"><%= brand.browserTitle %></span>
+          </div>
+
+          <div class="branding-preview-footer">
+            Footer:
+            <strong id="brandingPreviewFooterName"><%= brand.footerName %></strong>
+          </div>
+        </div>
+
+        <form
+          method="post"
+          action="/admin/branding"
+          enctype="multipart/form-data"
+          class="stack"
+          id="brandingForm"
+        >
+          <div class="form-grid">
+            <label>Website-Name
+              <input
+                name="siteName"
+                id="brandingSiteName"
+                maxlength="80"
+                value="<%= brand.siteName %>"
+                required
+              >
+              <small class="field-help">
+                Wird auch als offizieller Gruppenname verwendet.
+              </small>
+            </label>
+
+            <label>Untertitel
+              <input
+                name="subtitle"
+                id="brandingSubtitle"
+                maxlength="80"
+                value="<%= brand.subtitle %>"
+                placeholder="Community Hub"
+              >
+            </label>
+
+            <label>Kürzel
+              <input
+                name="abbreviation"
+                id="brandingAbbreviation"
+                maxlength="5"
+                value="<%= brand.abbreviation %>"
+                required
+              >
+              <small class="field-help">Beispiel: VN, JN oder VNX.</small>
+            </label>
+
+            <label>Browser-Tab-Name
+              <input
+                name="browserTitle"
+                id="brandingBrowserTitle"
+                maxlength="80"
+                value="<%= brand.browserTitle %>"
+              >
+            </label>
+
+            <label>Admin-Name
+              <input
+                name="adminName"
+                id="brandingAdminName"
+                maxlength="40"
+                value="<%= brand.adminName %>"
+                placeholder="Admin"
+              >
+            </label>
+
+            <label>Admin-Kürzel
+              <input
+                name="adminAbbreviation"
+                id="brandingAdminAbbreviation"
+                maxlength="5"
+                value="<%= brand.adminAbbreviation %>"
+              >
+            </label>
+
+            <label>Footer-Name
+              <input
+                name="footerName"
+                id="brandingFooterName"
+                maxlength="80"
+                value="<%= brand.footerName %>"
+              >
+            </label>
+
+            <label>Logo oben links
+              <input
+                name="brandLogo"
+                id="brandingLogoInput"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+              >
+              <small class="field-help">
+                Empfohlen: quadratisch oder breit, maximal 5 MB.
+              </small>
+            </label>
+
+            <label>Favicon für den Browser-Tab
+              <input
+                name="brandFavicon"
+                id="brandingFaviconInput"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+              >
+              <small class="field-help">
+                Empfohlen: quadratisches PNG, mindestens 128 × 128 Pixel.
+              </small>
+            </label>
+
+            <label>Standardbild für geteilte Links
+              <input
+                name="brandSocialImage"
+                id="brandingSocialInput"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+              >
+              <small class="field-help">
+                Empfohlen: 1200 × 630 Pixel. Für vollständige Internet-Links
+                später SITE_URL in der .env setzen.
+              </small>
+            </label>
+          </div>
+
+          <% if (brand.logo || brand.favicon || brand.socialImage) { %>
+            <div class="branding-remove-grid">
+              <% if (brand.logo) { %>
+                <label class="checkbox-line">
+                  <input name="removeLogo" type="checkbox">
+                  Gespeichertes Logo entfernen
+                </label>
+              <% } %>
+
+              <% if (brand.favicon) { %>
+                <label class="checkbox-line">
+                  <input name="removeFavicon" type="checkbox">
+                  Gespeichertes Favicon entfernen
+                </label>
+              <% } %>
+
+              <% if (brand.socialImage) { %>
+                <label class="checkbox-line">
+                  <input name="removeSocialImage" type="checkbox">
+                  Gespeichertes Link-Vorschaubild entfernen
+                </label>
+              <% } %>
+            </div>
+          <% } %>
+
+          <button class="button primary" type="submit">
+            Branding speichern
+          </button>
+        </form>
+
+        <form
+          method="post"
+          action="/admin/branding/reset"
+          onsubmit="return confirm('Zusatzangaben aus dem aktuellen Website-Namen neu erstellen? Hochgeladene Logos bleiben erhalten.')"
+        >
+          <button class="button" type="submit">
+            Zusatzangaben neu erstellen
+          </button>
+        </form>
+      </section>
+    <% } %>
+
+
+    <% if (roleCan("appearance.manage")) { %>
+      <% const headerStyle = data.group.headerDesign || {
+        mode: "galaxy",
+        color1: "#050818",
+        color2: "#17103a",
+        accent1: "#5767ff",
+        accent2: "#be3cff",
+        image: "",
+        overlay: 76,
+        blur: 18,
+        shadow: true
+      }; %>
+
+      <section class="panel header-design-admin" id="header-design">
+        <span class="eyebrow">Navigation gestalten</span>
+        <h2>Obere Kopfzeile</h2>
+        <p>
+          Hier änderst du den Hintergrund der oberen Navigationsleiste.
+          Die Einstellung gilt sofort auf der gesamten öffentlichen Webseite.
+        </p>
+
+        <% if (query.headerDesign === "saved") { %>
+          <p class="success-message">Die Kopfzeile wurde gespeichert.</p>
+        <% } else if (query.headerDesign === "reset") { %>
+          <p class="success-message">Die Kopfzeile wurde auf den Galaxy-Standard zurückgesetzt.</p>
+        <% } %>
+
+        <div
+          class="header-design-preview"
+          id="headerDesignPreview"
+          data-mode="<%= headerStyle.mode %>"
+          data-current-image="<%= headerStyle.image || "" %>"
+          style="
+            --header-one:<%= headerStyle.color1 %>;
+            --header-two:<%= headerStyle.color2 %>;
+            --header-accent-one:<%= headerStyle.accent1 %>;
+            --header-accent-two:<%= headerStyle.accent2 %>;
+            --header-overlay:<%= Number(headerStyle.overlay ?? 76) / 100 %>;
+            --header-blur:<%= Number(headerStyle.blur ?? 18) %>px;
+            <% if (headerStyle.image) { %>
+              --header-image:url('<%= headerStyle.image %>');
+            <% } %>
+          "
+        >
+          <div class="header-preview-brand">
+            <span class="header-preview-logo">VN</span>
+            <div>
+              <strong><%= data.group.name %></strong>
+              <small>COMMUNITY HUB</small>
+            </div>
+          </div>
+          <div class="header-preview-links">
+            <span>Entdecken</span>
+            <span>Community</span>
+            <span>Anmelden</span>
+          </div>
+        </div>
+
+        <form
+          method="post"
+          action="/admin/header-design"
+          enctype="multipart/form-data"
+          class="stack"
+          id="headerDesignForm"
+        >
+          <div class="form-grid">
+            <label>Hintergrundart
+              <select name="mode" id="headerDesignMode">
+                <option value="galaxy" <%= headerStyle.mode === "galaxy" ? "selected" : "" %>>
+                  Galaxy-Verlauf
+                </option>
+                <option value="gradient" <%= headerStyle.mode === "gradient" ? "selected" : "" %>>
+                  Normaler Farbverlauf
+                </option>
+                <option value="solid" <%= headerStyle.mode === "solid" ? "selected" : "" %>>
+                  Einfarbig
+                </option>
+                <option value="image" <%= headerStyle.mode === "image" ? "selected" : "" %>>
+                  Eigenes Bild
+                </option>
+              </select>
+            </label>
+
+            <label>Hauptfarbe
+              <input
+                name="color1"
+                id="headerColor1"
+                type="color"
+                value="<%= headerStyle.color1 %>"
+              >
+            </label>
+
+            <label>Zweite Farbe
+              <input
+                name="color2"
+                id="headerColor2"
+                type="color"
+                value="<%= headerStyle.color2 %>"
+              >
+            </label>
+
+            <label>Galaxy-Farbe links
+              <input
+                name="accent1"
+                id="headerAccent1"
+                type="color"
+                value="<%= headerStyle.accent1 %>"
+              >
+            </label>
+
+            <label>Galaxy-Farbe rechts
+              <input
+                name="accent2"
+                id="headerAccent2"
+                type="color"
+                value="<%= headerStyle.accent2 %>"
+              >
+            </label>
+
+            <label>Bild abdunkeln
+              <input
+                name="overlay"
+                id="headerOverlay"
+                type="range"
+                min="0"
+                max="95"
+                value="<%= headerStyle.overlay ?? 76 %>"
+              >
+              <small class="field-help">
+                Aktuell:
+                <strong id="headerOverlayValue"><%= headerStyle.overlay ?? 76 %>%</strong>
+              </small>
+            </label>
+
+            <label>Glas-Unschärfe
+              <input
+                name="blur"
+                id="headerBlur"
+                type="range"
+                min="0"
+                max="30"
+                value="<%= headerStyle.blur ?? 18 %>"
+              >
+              <small class="field-help">
+                Aktuell:
+                <strong id="headerBlurValue"><%= headerStyle.blur ?? 18 %> px</strong>
+              </small>
+            </label>
+
+            <label>Neues Hintergrundbild
+              <input
+                name="headerBackgroundImage"
+                id="headerBackgroundImage"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+              >
+              <small class="field-help">
+                Wird nur bei „Eigenes Bild“ angezeigt. Maximal 5 MB.
+              </small>
+            </label>
+
+            <label class="checkbox-line">
+              <input
+                name="shadow"
+                id="headerShadow"
+                type="checkbox"
+                <%= headerStyle.shadow === false ? "" : "checked" %>
+              >
+              Schatten unter der Kopfzeile anzeigen
+            </label>
+
+            <% if (headerStyle.image) { %>
+              <label class="checkbox-line">
+                <input name="removeImage" type="checkbox">
+                Gespeichertes Kopfzeilenbild entfernen
+              </label>
+            <% } %>
+          </div>
+
+          <button class="button primary" type="submit">
+            Kopfzeile speichern
+          </button>
+        </form>
+
+        <form
+          method="post"
+          action="/admin/header-design/reset"
+          onsubmit="return confirm('Kopfzeile auf den Galaxy-Standard zurücksetzen?')"
+        >
+          <button class="button" type="submit">
+            Galaxy-Standard wiederherstellen
+          </button>
+        </form>
+      </section>
+    <% } %>
+
+
+    <% if (roleCan("appearance.manage")) { %>
+      <% const design = data.group.siteDesign || {
+        fontFamily: "system",
+        baseFontSize: 16,
+        headingScale: 100,
+        textAlign: "left",
+        heroAlign: "left",
+        contentWidth: 1200,
+        sectionSpacing: 100,
+        cardRadius: 18,
+        buttonRadius: 13,
+        cardOpacity: 94,
+        navStyle: "normal",
+        showAnimations: true
+      }; %>
+
+      <section class="panel design-studio-admin" id="design-studio">
+        <span class="eyebrow">Design-Studio</span>
+        <h2>Layout und Schrift gestalten</h2>
+        <p>Diese Einstellungen verändern die gesamte Webseite. Sie sind kontrolliert begrenzt, damit Texte und Navigation weiterhin funktionieren.</p>
+
+        <div class="design-studio-preview" id="designStudioPreview">
+          <div class="preview-nav">
+            <strong><%= data.group.name %></strong>
+            <span>Start · Mitglieder · Kontakt</span>
+          </div>
+          <div class="preview-hero">
+            <small>VORSCHAU</small>
+            <h3>Deine Community. Dein Stil.</h3>
+            <p>So wirken Schrift, Ausrichtung, Karten und Abstände ungefähr.</p>
+            <button type="button">Beispielknopf</button>
+          </div>
+          <div class="preview-card">
+            <strong>Beispielkarte</strong>
+            <p>Inhalte bleiben auch bei individuellen Einstellungen lesbar.</p>
+          </div>
+        </div>
+
+        <form method="post" action="/admin/site-design" class="stack" id="designStudioForm">
+          <div class="form-grid">
+            <label>Schriftart
+              <select name="fontFamily" id="designFontFamily">
+                <option value="system" <%= design.fontFamily === "system" ? "selected" : "" %>>Standard und klar</option>
+                <option value="modern" <%= design.fontFamily === "modern" ? "selected" : "" %>>Modern</option>
+                <option value="rounded" <%= design.fontFamily === "rounded" ? "selected" : "" %>>Rund und verspielt</option>
+                <option value="editorial" <%= design.fontFamily === "editorial" ? "selected" : "" %>>Editorial mit Serifen</option>
+                <option value="mono" <%= design.fontFamily === "mono" ? "selected" : "" %>>Technisch und Monospace</option>
+              </select>
+            </label>
+
+            <label>Normale Schriftgröße
+              <input name="baseFontSize" id="designBaseSize" type="range"
+                min="14" max="22" value="<%= design.baseFontSize %>">
+              <small class="field-help"><strong id="baseSizeValue"><%= design.baseFontSize %> px</strong></small>
+            </label>
+
+            <label>Überschriftengröße
+              <input name="headingScale" id="designHeadingScale" type="range"
+                min="80" max="150" value="<%= design.headingScale %>">
+              <small class="field-help"><strong id="headingScaleValue"><%= design.headingScale %>%</strong></small>
+            </label>
+
+            <label>Normale Textausrichtung
+              <select name="textAlign" id="designTextAlign">
+                <option value="left" <%= design.textAlign === "left" ? "selected" : "" %>>Links</option>
+                <option value="center" <%= design.textAlign === "center" ? "selected" : "" %>>Zentriert</option>
+              </select>
+            </label>
+
+            <label>Ausrichtung großer Startbereiche
+              <select name="heroAlign" id="designHeroAlign">
+                <option value="left" <%= design.heroAlign === "left" ? "selected" : "" %>>Links</option>
+                <option value="center" <%= design.heroAlign === "center" ? "selected" : "" %>>Zentriert</option>
+                <option value="right" <%= design.heroAlign === "right" ? "selected" : "" %>>Rechts</option>
+              </select>
+            </label>
+
+            <label>Maximale Seitenbreite
+              <input name="contentWidth" id="designContentWidth" type="range"
+                min="900" max="1600" step="50" value="<%= design.contentWidth %>">
+              <small class="field-help"><strong id="contentWidthValue"><%= design.contentWidth %> px</strong></small>
+            </label>
+
+            <label>Abstand zwischen Bereichen
+              <input name="sectionSpacing" id="designSectionSpacing" type="range"
+                min="50" max="160" step="5" value="<%= design.sectionSpacing %>">
+              <small class="field-help"><strong id="sectionSpacingValue"><%= design.sectionSpacing %> px</strong></small>
+            </label>
+
+            <label>Rundung der Karten
+              <input name="cardRadius" id="designCardRadius" type="range"
+                min="0" max="36" value="<%= design.cardRadius %>">
+              <small class="field-help"><strong id="cardRadiusValue"><%= design.cardRadius %> px</strong></small>
+            </label>
+
+            <label>Rundung der Knöpfe
+              <input name="buttonRadius" id="designButtonRadius" type="range"
+                min="0" max="30" value="<%= design.buttonRadius %>">
+              <small class="field-help"><strong id="buttonRadiusValue"><%= design.buttonRadius %> px</strong></small>
+            </label>
+
+            <label>Deckkraft der Karten
+              <input name="cardOpacity" id="designCardOpacity" type="range"
+                min="60" max="100" value="<%= design.cardOpacity %>">
+              <small class="field-help"><strong id="cardOpacityValue"><%= design.cardOpacity %>%</strong></small>
+            </label>
+
+            <label>Größe der Navigation
+              <select name="navStyle" id="designNavStyle">
+                <option value="compact" <%= design.navStyle === "compact" ? "selected" : "" %>>Kompakt</option>
+                <option value="normal" <%= design.navStyle === "normal" ? "selected" : "" %>>Normal</option>
+                <option value="spacious" <%= design.navStyle === "spacious" ? "selected" : "" %>>Großzügig</option>
+              </select>
+            </label>
+          </div>
+
+          <button class="button primary" type="submit">Design speichern</button>
+        </form>
+
+        <form method="post" action="/admin/site-design/reset"
+          onsubmit="return confirm('Gesamtes Website-Design auf Standard zurücksetzen?')">
+          <button class="button" type="submit">Design auf Standard zurücksetzen</button>
+        </form>
+      </section>
+    <% } %>
+
+
+    
+    <% if (roleCan("animations.manage")) { %>
+      <% const animations = data.group.siteAnimations || {
+        enabled: true,
+        type: "fade-up",
+        speed: "normal",
+        intensity: 100,
+        trigger: "viewport",
+        stagger: true,
+        hoverEffects: true
+      }; %>
+
+      <section class="panel animation-studio-admin" id="animations-studio">
+        <span class="eyebrow">Animations-Studio</span>
+        <h2>Website-Animationen</h2>
+        <p>Hier steuerst du alle Bewegungen der Website zentral. Nutzer mit aktivierter Bewegungsreduzierung erhalten automatisch eine ruhige Darstellung.</p>
+
+        <div class="animation-preview" id="animationPreview" data-animation-ignore>
+          <div class="animation-preview-card" id="animationPreviewCard">
+            <span class="eyebrow">Vorschau</span>
+            <h3>VTuber Nexus</h3>
+            <p>So erscheint ein Bereich auf deiner Webseite.</p>
+            <button class="button primary" type="button">Beispiel</button>
+          </div>
+        </div>
+
+        <form method="post" action="/admin/site-animations" class="stack">
+          <div class="form-grid">
+            <label class="checkbox-line">
+              <input name="enabled" id="animationEnabled" type="checkbox"
+                <%= animations.enabled === false ? "" : "checked" %>>
+              Animationen einschalten
+            </label>
+
+            <label>Animationsart
+              <select name="type" id="animationType">
+                <option value="fade" <%= animations.type === "fade" ? "selected" : "" %>>Einblenden</option>
+                <option value="fade-up" <%= animations.type === "fade-up" ? "selected" : "" %>>Von unten einblenden</option>
+                <option value="slide-left" <%= animations.type === "slide-left" ? "selected" : "" %>>Von links einschieben</option>
+                <option value="slide-right" <%= animations.type === "slide-right" ? "selected" : "" %>>Von rechts einschieben</option>
+                <option value="zoom" <%= animations.type === "zoom" ? "selected" : "" %>>Sanft heranzoomen</option>
+                <option value="float" <%= animations.type === "float" ? "selected" : "" %>>Schweben</option>
+              </select>
+            </label>
+
+            <label>Geschwindigkeit
+              <select name="speed" id="animationSpeed">
+                <option value="slow" <%= animations.speed === "slow" ? "selected" : "" %>>Langsam</option>
+                <option value="normal" <%= animations.speed === "normal" ? "selected" : "" %>>Normal</option>
+                <option value="fast" <%= animations.speed === "fast" ? "selected" : "" %>>Schnell</option>
+              </select>
+            </label>
+
+            <label>Stärke
+              <input name="intensity" id="animationIntensity" type="range"
+                min="50" max="150" value="<%= animations.intensity || 100 %>">
+              <small class="field-help">
+                <strong id="animationIntensityValue"><%= animations.intensity || 100 %>%</strong>
+              </small>
+            </label>
+
+            <label>Auslösen
+              <select name="trigger" id="animationTrigger">
+                <option value="viewport" <%= animations.trigger === "viewport" ? "selected" : "" %>>
+                  Beim Scrollen in den sichtbaren Bereich
+                </option>
+                <option value="load" <%= animations.trigger === "load" ? "selected" : "" %>>
+                  Direkt beim Laden der Seite
+                </option>
+              </select>
+            </label>
+
+            <label class="checkbox-line">
+              <input name="stagger" type="checkbox"
+                <%= animations.stagger === false ? "" : "checked" %>>
+              Elemente nacheinander einblenden
+            </label>
+
+            <label class="checkbox-line">
+              <input name="hoverEffects" type="checkbox"
+                <%= animations.hoverEffects === false ? "" : "checked" %>>
+              Karten und Knöpfe beim Darüberfahren bewegen
+            </label>
+          </div>
+
+          <button class="button primary" type="submit">Animationen speichern</button>
+        </form>
+
+        <form method="post" action="/admin/site-animations/reset"
+          onsubmit="return confirm('Animationen auf Standard zurücksetzen?')">
+          <button class="button" type="submit">Animationen zurücksetzen</button>
+        </form>
+      </section>
+    <% } %>
+
+
+    
+    <section class="panel team-calendar-admin" id="teamkalender">
+      <span class="eyebrow">Organisation</span>
+      <h2>Teamkalender und Event-Zusagen</h2>
+      <p>Erstelle öffentliche Teamtermine oder private Termine für ausgewählte Mitglieder.</p>
+
+      <form method="post" action="/admin/team-event" class="stack">
+        <div class="form-grid">
+          <label>Titel
+            <input name="title" maxlength="120" required>
+          </label>
+
+          <label>Datum
+            <input name="date" type="date" required>
+          </label>
+
+          <label>Uhrzeit
+            <input name="time" type="time">
+          </label>
+
+          <label>Ort oder Plattform
+            <input name="location" maxlength="160" placeholder="Discord, Twitch, Studio ...">
+          </label>
+
+          <label>Sichtbarkeit
+            <select name="visibility" id="teamEventVisibility">
+              <option value="all">Für alle Mitglieder</option>
+              <option value="private">Nur ausgewählte Mitglieder</option>
+            </select>
+          </label>
+        </div>
+
+        <label>Beschreibung
+          <textarea name="description" rows="5" maxlength="3000"></textarea>
+        </label>
+
+        <fieldset class="private-members-field" id="privateEventMembers">
+          <legend>Mitglieder für privates Event</legend>
+          <div class="member-checkbox-grid">
+            <% data.members.forEach(member => { %>
+              <label class="checkbox-line">
+                <input type="checkbox" name="allowedMemberIds" value="<%= member.id %>">
+                <%= member.name %> · <%= member.role %>
+              </label>
+            <% }) %>
+          </div>
+        </fieldset>
+
+        <button class="button primary" type="submit">Event erstellen</button>
+      </form>
+
+      <div class="admin-event-list">
+        <h3>Geplante Events</h3>
+        <% [...(data.teamEvents || [])].sort((a, b) => new Date(`${a.date}T${a.time || "00:00"}`) - new Date(`${b.date}T${b.time || "00:00"}`)).forEach(event => {
+          const counts = {
+            yes: (data.eventResponses || []).filter(item => item.eventId === event.id && item.status === "yes").length,
+            maybe: (data.eventResponses || []).filter(item => item.eventId === event.id && item.status === "maybe").length,
+            no: (data.eventResponses || []).filter(item => item.eventId === event.id && item.status === "no").length
+          };
+        %>
+          <article class="internal-admin-item admin-team-event">
+            <div>
+              <strong><%= event.title %></strong>
+              <small>
+                <%= event.date %> <%= event.time || "" %>
+                · <%= event.visibility === "private" ? "privat" : "alle Mitglieder" %>
+                · ✅ <%= counts.yes %> · 🤔 <%= counts.maybe %> · ❌ <%= counts.no %>
+              </small>
+            </div>
+            <form method="post" action="/admin/team-event/<%= event.id %>/delete"
+              onsubmit="return confirm('Event und alle Zusagen löschen?')">
+              <button class="button danger small" type="submit">Löschen</button>
+            </form>
+          </article>
+        <% }) %>
+
+        <% if (!(data.teamEvents || []).length) { %>
+          <p>Noch keine Team-Events geplant.</p>
+        <% } %>
+      </div>
+    </section>
+
+
+    <section class="panel community-moderation-admin" id="community-moderation">
+      <span class="eyebrow">Community</span>
+      <h2>Pinnwand moderieren</h2>
+      <p>Beiträge anpinnen, öffnen oder entfernen.</p>
+
+      <div class="admin-community-list">
+        <% [...(data.communityPosts || [])]
+          .sort((a,b) => Boolean(a.pinned) !== Boolean(b.pinned) ? (a.pinned ? -1 : 1) : new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+          .forEach(post => {
+            const author = data.members.find(member => member.id === post.authorMemberId);
+            const comments = (data.communityComments || []).filter(comment => comment.postId === post.id).length;
+        %>
+          <article class="internal-admin-item admin-community-item">
+            <div>
+              <strong><%= post.pinned ? "📌 " : "" %><%= post.title %></strong>
+              <small>Von <%= author?.name || "Gelöschtes Mitglied" %> · <%= comments %> Kommentare</small>
+            </div>
+            <div class="admin-community-actions">
+              <form method="post" action="/admin/community/<%= post.id %>/toggle-pin">
+                <button class="button small" type="submit"><%= post.pinned ? "Lösen" : "Anpinnen" %></button>
+              </form>
+              <a class="button small" href="/member-area/community#<%= post.id %>">Öffnen</a>
+              <form method="post" action="/admin/community/<%= post.id %>/delete" onsubmit="return confirm('Beitrag löschen?')">
+                <button class="button small danger" type="submit">Löschen</button>
+              </form>
+            </div>
+          </article>
+        <% }) %>
+        <% if (!(data.communityPosts || []).length) { %><p>Noch keine Beiträge vorhanden.</p><% } %>
+      </div>
+    </section>
+
+
+    <section class="panel" id="projektverwaltung">
+      <span class="eyebrow">Organisation</span>
+      <h2>Projektverwaltung</h2>
+
+      <form method="post" action="/admin/project" class="stack">
+        <div class="form-grid">
+          <label>Titel<input name="title" maxlength="140" required></label>
+          <label>Status<select name="status"><option value="idea">Idee</option><option value="planned">Geplant</option><option value="active">In Arbeit</option><option value="done">Fertig</option></select></label>
+          <label>Sichtbarkeit<select name="visibility"><option value="assigned">Nur Zugewiesene</option><option value="all">Alle Mitglieder</option></select></label>
+          <label>Projektleitung<select name="leaderMemberId"><option value="">Nicht festgelegt</option><% data.members.forEach(member => { %><option value="<%= member.id %>"><%= member.name %></option><% }) %></select></label>
+          <label>Frist<input name="dueDate" type="date"></label>
+          <label>Fortschritt<input name="progress" type="number" min="0" max="100" value="0"></label>
+        </div>
+        <label>Beschreibung<textarea name="description" rows="5" maxlength="5000"></textarea></label>
+        <fieldset class="private-members-field"><legend>Projektmitglieder</legend><div class="member-checkbox-grid">
+          <% data.members.forEach(member => { %><label class="checkbox-line"><input type="checkbox" name="memberIds" value="<%= member.id %>"><%= member.name %></label><% }) %>
+        </div></fieldset>
+        <button class="button primary" type="submit">Projekt erstellen</button>
+      </form>
+
+      <div class="admin-project-list">
+        <% (data.projects || []).forEach(project => { %>
+          <article class="panel admin-project-card">
+            <form method="post" action="/admin/project/<%= project.id %>/update" class="stack">
+              <div class="form-grid">
+                <label>Titel<input name="title" value="<%= project.title %>" required></label>
+                <label>Status<select name="status"><% [["idea","Idee"],["planned","Geplant"],["active","In Arbeit"],["done","Fertig"]].forEach(o => { %><option value="<%= o[0] %>" <%= project.status === o[0] ? "selected" : "" %>><%= o[1] %></option><% }) %></select></label>
+                <label>Sichtbarkeit<select name="visibility"><option value="assigned" <%= project.visibility === "assigned" ? "selected" : "" %>>Nur Zugewiesene</option><option value="all" <%= project.visibility === "all" ? "selected" : "" %>>Alle</option></select></label>
+                <label>Projektleitung<select name="leaderMemberId"><option value="">Nicht festgelegt</option><% data.members.forEach(member => { %><option value="<%= member.id %>" <%= project.leaderMemberId === member.id ? "selected" : "" %>><%= member.name %></option><% }) %></select></label>
+                <label>Frist<input name="dueDate" type="date" value="<%= project.dueDate || "" %>"></label>
+                <label>Fortschritt<input name="progress" type="number" min="0" max="100" value="<%= project.progress || 0 %>"></label>
+              </div>
+              <label>Beschreibung<textarea name="description" rows="4"><%= project.description || "" %></textarea></label>
+              <fieldset class="private-members-field"><legend>Mitglieder</legend><div class="member-checkbox-grid">
+                <% data.members.forEach(member => { %><label class="checkbox-line"><input type="checkbox" name="memberIds" value="<%= member.id %>" <%= (project.memberIds || []).includes(member.id) ? "checked" : "" %>><%= member.name %></label><% }) %>
+              </div></fieldset>
+              <button class="button small primary" type="submit">Speichern</button>
+            </form>
+            <form method="post" action="/admin/project/<%= project.id %>/delete" onsubmit="return confirm('Projekt löschen?')"><button class="button small danger" type="submit">Löschen</button></form>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+
+
+    <section class="panel" id="medienverwaltung">
+      <span class="eyebrow">Dateien</span>
+      <h2>Medienverwaltung</h2>
+      <p>Übersicht aller gespeicherten Dateien. Gründer und Moderatoren können Dateien hier endgültig löschen.</p>
+
+      <% if (query.mediaDeleted === "1") { %>
+        <p class="success-message">Die Datei wurde endgültig gelöscht.</p>
+      <% } else if (query.mediaDeleted === "missing") { %>
+        <p class="field-help">Die Datei war bereits nicht mehr vorhanden.</p>
+      <% } else if (query.mediaDeleted === "error") { %>
+        <p class="error-message">Die Datei konnte nicht vollständig gelöscht werden.</p>
+      <% } %>
+
+      <div class="admin-media-list">
+        <% [...(data.mediaFiles || [])].reverse().slice(0, 20).forEach(file => {
+          const uploader = data.members.find(member => member.id === file.uploaderMemberId);
+        %>
+          <article class="internal-admin-item">
+            <div>
+              <strong><%= file.title %></strong>
+              <small>
+                <%= file.category %> · <%= (file.size / 1024 / 1024).toFixed(2) %> MB
+                · von <%= uploader?.name || "Gelöschtes Mitglied" %>
+              </small>
+            </div>
+            <div class="admin-media-actions">
+              <a class="button small" href="/member-area/media#<%= file.id %>">Öffnen</a>
+              <form
+                method="post"
+                action="/admin/media/<%= file.id %>/delete"
+                onsubmit="return confirm('Datei endgültig löschen? Sie wird auch aus data/media entfernt.')"
+              >
+                <button class="button small danger" type="submit">Endgültig löschen</button>
+              </form>
+            </div>
+          </article>
+        <% }) %>
+        <% if (!(data.mediaFiles || []).length) { %><p>Noch keine Dateien hochgeladen.</p><% } %>
+      </div>
+    </section>
+
+
+    <section class="panel" id="abstimmungen">
+      <span class="eyebrow">Mitbestimmung</span>
+      <h2>Abstimmungen und Umfragen</h2>
+      <p>Erstelle interne Abstimmungen mit bis zu acht Antwortmöglichkeiten.</p>
+
+      <form method="post" action="/admin/poll" class="stack">
+        <label>Frage
+          <input name="question" maxlength="240" required>
+        </label>
+
+        <label>Beschreibung
+          <textarea name="description" rows="4" maxlength="3000"></textarea>
+        </label>
+
+        <div class="form-grid">
+          <label>Sichtbarkeit
+            <select name="visibility" id="pollVisibility">
+              <option value="all">Alle Mitglieder</option>
+              <option value="selected">Ausgewählte Mitglieder</option>
+            </select>
+          </label>
+
+          <label>Enddatum und Uhrzeit
+            <input name="endsAt" type="datetime-local">
+          </label>
+
+          <label class="checkbox-line">
+            <input name="anonymous" type="checkbox">
+            Anonyme Abstimmung
+          </label>
+
+          <label class="checkbox-line">
+            <input name="pinned" type="checkbox">
+            Abstimmung anpinnen
+          </label>
+        </div>
+
+        <fieldset class="private-members-field" id="pollMembersField" hidden>
+          <legend>Teilnahmeberechtigte Mitglieder</legend>
+          <div class="member-checkbox-grid">
+            <% data.members.forEach(member => { %>
+              <label class="checkbox-line">
+                <input type="checkbox" name="allowedMemberIds" value="<%= member.id %>">
+                <%= member.name %>
+              </label>
+            <% }) %>
+          </div>
+        </fieldset>
+
+        <fieldset class="private-members-field">
+          <legend>Antwortmöglichkeiten</legend>
+          <div class="poll-option-admin-list">
+            <% for (let index = 0; index < 8; index += 1) { %>
+              <label>Antwort <%= index + 1 %>
+                <input name="options" maxlength="160" <%= index < 2 ? "required" : "" %>>
+              </label>
+            <% } %>
+          </div>
+        </fieldset>
+
+        <button class="button primary" type="submit">Abstimmung erstellen</button>
+      </form>
+
+      <div class="admin-poll-list">
+        <% [...(data.polls || [])].reverse().forEach(poll => {
+          const votes = (data.pollVotes || []).filter(vote => vote.pollId === poll.id);
+        %>
+          <article class="internal-admin-item">
+            <div>
+              <strong><%= poll.pinned ? "📌 " : "" %><%= poll.question %></strong>
+              <small><%= votes.length %> Stimmen · <%= poll.endsAt ? `endet ${poll.endsAt}` : "ohne Enddatum" %></small>
+            </div>
+
+            <div class="admin-community-actions">
+              <form method="post" action="/admin/poll/<%= poll.id %>/toggle-pin">
+                <button class="button small" type="submit"><%= poll.pinned ? "Lösen" : "Anpinnen" %></button>
+              </form>
+              <a class="button small" href="/member-area/polls#<%= poll.id %>">Öffnen</a>
+              <form method="post" action="/admin/poll/<%= poll.id %>/delete" onsubmit="return confirm('Abstimmung und alle Stimmen löschen?')">
+                <button class="button small danger" type="submit">Löschen</button>
+              </form>
+            </div>
+          </article>
+        <% }) %>
+
+        <% if (!(data.polls || []).length) { %>
+          <p>Noch keine Abstimmungen vorhanden.</p>
+        <% } %>
+      </div>
+    </section>
+
+
+    
+    <% if (roleCan("security.manage")) { %>
+      <section class="panel system-check-panel" id="systempruefung">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Diagnose</span>
+            <h2>Systemprüfung</h2>
+            <p>
+              Prüft die wichtigsten Voraussetzungen, ohne Passwörter oder
+              geheime Schlüssel anzuzeigen.
+            </p>
+          </div>
+
+          <a class="button small primary" href="/admin/system-check/download">
+            Bericht herunterladen
+          </a>
+        </div>
+
+        <div class="system-check-summary">
+          <article class="system-check-score <%= diagnostics.warnings ? 'has-warning' : 'is-good' %>">
+            <strong><%= diagnostics.passed %></strong>
+            <span>Prüfungen bestanden</span>
+          </article>
+          <article>
+            <strong><%= diagnostics.warnings %></strong>
+            <span>Warnungen</span>
+          </article>
+          <article>
+            <strong><%= diagnostics.counts.members %></strong>
+            <span>Mitglieder</span>
+          </article>
+          <article>
+            <strong><%= diagnostics.counts.backups %></strong>
+            <span>Backups</span>
+          </article>
+        </div>
+
+        <div class="system-check-list">
+          <% diagnostics.checks.forEach(check => { %>
+            <article class="<%= check.ok ? 'check-ok' : 'check-warning' %>">
+              <span class="system-check-icon" aria-hidden="true">
+                <%= check.ok ? "✓" : "!" %>
+              </span>
+              <div>
+                <strong><%= check.label %></strong>
+                <p><%= check.message %></p>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+
+        <p class="field-help">
+          Letzte Prüfung:
+          <%= new Date(diagnostics.generatedAt).toLocaleString("de-DE") %>
+        </p>
+      </section>
+    <% } %>
+
+<% if (roleCan("security.manage")) { %>
+      <section class="panel security-backup-admin" id="sicherheit-backups">
+        <span class="eyebrow">Systemschutz</span>
+        <h2>Sicherheit und Backups</h2>
+        <p>Backups, Sitzungen und Sicherheitsereignisse an einem Ort.</p>
+
+        <% if (query.backup === "created") { %>
+          <p class="success-message">Backup wurde erstellt.</p>
+        <% } else if (query.backup === "restored") { %>
+          <p class="success-message">Backup wurde wiederhergestellt.</p>
+        <% } else if (query.backup === "deleted") { %>
+          <p class="success-message">Backup wurde gelöscht.</p>
+        <% } else if (query.backup === "json-restored") { %>
+          <p class="success-message">JSON-Backup wurde sicher wiederhergestellt.</p>
+        <% } else if (query.backup) { %>
+          <p class="error-message">Die Backup-Aktion ist fehlgeschlagen.</p>
+        <% } %>
+
+        <% if (query.session === "ended") { %>
+          <p class="success-message">Die Sitzung wurde beendet.</p>
+        <% } %>
+
+        <div class="security-summary-grid">
+          <article><strong><%= backups.length %></strong><span>Backups</span></article>
+          <article><strong><%= sessions.length %></strong><span>Sitzungen</span></article>
+          <article><strong><%= (data.securityLog || []).length %></strong><span>Protokolleinträge</span></article>
+        </div>
+
+        <div class="security-admin-columns">
+          <div>
+            <div class="section-head">
+              <div><span class="eyebrow">Datensicherung</span><h3>Backups</h3></div>
+              <form method="post" action="/admin/backups/create">
+                <button class="button small primary" type="submit">Backup erstellen</button>
+              </form>
+            </div>
+
+            <div class="security-list">
+              <% backups.forEach(backup => { %>
+                <article class="security-list-item">
+                  <div>
+                    <strong><%= backup.name %></strong>
+                    <small>
+                      <%= new Date(backup.createdAt).toLocaleString("de-DE") %>
+                      · <%= (backup.size / 1024 / 1024).toFixed(2) %> MB
+                      · <%= backup.valid ? "gültig" : "UNGÜLTIG" %>
+                    </small>
+                    <% if (!backup.valid) { %>
+                      <small class="error-message"><%= backup.error %></small>
+                    <% } %>
+                  </div>
+
+                  <div class="security-actions">
+                    <a class="button small" href="/admin/backups/<%= backup.name %>/download">Download</a>
+                    <% if (backup.valid) { %>
+                      <form method="post" action="/admin/backups/<%= backup.name %>/restore"
+                        onsubmit="return confirm('Backup wirklich wiederherstellen?')">
+                        <button class="button small" type="submit">Wiederherstellen</button>
+                      </form>
+                    <% } %>
+                    <form method="post" action="/admin/backups/<%= backup.name %>/delete"
+                      onsubmit="return confirm('Backup löschen?')">
+                      <button class="button small danger" type="submit">Löschen</button>
+                    </form>
+                  </div>
+                </article>
+              <% }) %>
+              <% if (!backups.length) { %><p>Noch keine Backups vorhanden.</p><% } %>
+            </div>
+          </div>
+
+          <div>
+            <span class="eyebrow">Zugänge</span>
+            <h3>Gespeicherte Sitzungen</h3>
+            <div class="security-list">
+              <% sessions.forEach(session => { %>
+                <article class="security-list-item">
+                  <div>
+                    <strong><%= session.member?.name || "Unbekannte Sitzung" %></strong>
+                    <small><%= new Date(session.updatedAt).toLocaleString("de-DE") %></small>
+                  </div>
+                  <form method="post" action="/admin/sessions/<%= session.name %>/delete"
+                    onsubmit="return confirm('Sitzung beenden?')">
+                    <button class="button small danger" type="submit">Beenden</button>
+                  </form>
+                </article>
+              <% }) %>
+              <% if (!sessions.length) { %><p>Keine Sitzungen vorhanden.</p><% } %>
+            </div>
+          </div>
+        </div>
+
+        <div class="security-log-section">
+          <span class="eyebrow">Protokoll</span>
+          <h3>Letzte Sicherheitsereignisse</h3>
+          <div class="security-log-table">
+            <% (data.securityLog || []).slice(0, 50).forEach(entry => { %>
+              <article>
+                <div><strong><%= entry.action %></strong><span><%= entry.actorName %></span></div>
+                <div><span><%= entry.target || "Keine Zusatzinformation" %></span><small><%= new Date(entry.createdAt).toLocaleString("de-DE") %></small></div>
+              </article>
+            <% }) %>
+            <% if (!(data.securityLog || []).length) { %><p>Noch keine Sicherheitsereignisse.</p><% } %>
+          </div>
+        </div>
+      </section>
+    <% } %>
+
+
+    <% if (access.isFounder) { %>
+      <section class="panel role-management-admin" id="rollenverwaltung">
+        <span class="eyebrow">Zugriffssteuerung</span>
+        <h2>Rollen & Rechte</h2>
+        <p>
+          Erstelle eigene Rollen und lege mit Häkchen fest, welche Bereiche
+          sie verwalten dürfen. Rollen erstellen, löschen und zuweisen darf
+          aus Sicherheitsgründen ausschließlich der Gründer.
+        </p>
+
+        <% if (query.role === "created") { %>
+          <p class="success-message">Die neue Rolle wurde erstellt.</p>
+        <% } else if (query.role === "updated") { %>
+          <p class="success-message">Die Rollenrechte wurden gespeichert.</p>
+        <% } else if (query.role === "deleted") { %>
+          <p class="success-message">
+            Die Rolle wurde gelöscht. <%= Number(query.roleMoved || 0) %>
+            Mitglied(er) wurden auf „Mitglied“ zurückgesetzt.
+          </p>
+        <% } else if (query.role === "duplicate") { %>
+          <p class="error-message">Diese Rollen-ID existiert bereits.</p>
+        <% } else if (query.role === "reserved" || query.role === "system-protected") { %>
+          <p class="error-message">Diese Systemrolle ist geschützt.</p>
+        <% } else if (query.role === "founder-protected") { %>
+          <p class="error-message">Die Gründerrolle kann nicht verändert werden.</p>
+        <% } else if (query.role === "invalid") { %>
+          <p class="error-message">Bitte gib einen gültigen Rollennamen ein.</p>
+        <% } %>
+
+        <div class="role-security-note">
+          <strong>🔒 Gründer-Schutz</strong>
+          <p>
+            Die Rolle „Gründer“ besitzt immer alle Rechte und kann weder
+            gelöscht noch über diese Formulare verändert werden.
+          </p>
+        </div>
+
+        <div class="role-editor-grid">
+          <article class="role-editor-card role-create-card">
+            <div class="role-editor-head">
+              <div>
+                <span class="eyebrow">Neue Rolle</span>
+                <h3>Rolle erstellen</h3>
+              </div>
+            </div>
+
+            <form method="post" action="/admin/roles" class="stack">
+              <div class="form-grid">
+                <label>Rollenname
+                  <input name="name" maxlength="50" placeholder="Zum Beispiel Event-Team" required>
+                </label>
+                <label>Farbe
+                  <input name="color" type="color" value="#9b6cff">
+                </label>
+              </div>
+
+              <div class="role-permission-grid">
+                <% permissionCatalog.forEach(permission => { %>
+                  <label class="role-permission-option">
+                    <input type="checkbox" name="permissions" value="<%= permission.key %>">
+                    <span>
+                      <strong><%= permission.label %></strong>
+                      <small><%= permission.description %></small>
+                    </span>
+                  </label>
+                <% }) %>
+              </div>
+
+              <p class="field-help">
+                Sobald mindestens ein Verwaltungsrecht aktiviert ist, wird
+                „Admin-Bereich öffnen“ automatisch mit aktiviert.
+              </p>
+              <button class="button primary" type="submit">Rolle erstellen</button>
+            </form>
+          </article>
+
+          <% (data.roles || []).forEach(role => { %>
+            <article class="role-editor-card <%= role.id === 'founder' ? 'is-founder-role' : '' %>">
+              <div class="role-editor-head">
+                <div>
+                  <span class="role-color-dot" style="--role-color:<%= role.color || '#9b6cff' %>"></span>
+                  <div>
+                    <h3><%= role.name %></h3>
+                    <small><code><%= role.id %></code> · <%= role.system ? "Systemrolle" : "Eigene Rolle" %></small>
+                  </div>
+                </div>
+                <span class="role-member-count">
+                  <%= data.members.filter(member => (member.roleId || 'member') === role.id).length %> Mitglied(er)
+                </span>
+              </div>
+
+              <% if (role.id === "founder") { %>
+                <div class="role-founder-lock">
+                  <strong>Alle Rechte</strong>
+                  <p>Diese Rolle ist fest geschützt und besitzt immer vollständigen Zugriff.</p>
+                </div>
+              <% } else { %>
+                <form method="post" action="/admin/roles/<%= role.id %>" class="stack">
+                  <div class="form-grid">
+                    <label>Rollenname
+                      <input name="name" maxlength="50" value="<%= role.name %>" <%= role.system ? "readonly" : "" %> required>
+                    </label>
+                    <label>Farbe
+                      <input name="color" type="color" value="<%= role.color || '#9b6cff' %>">
+                    </label>
+                  </div>
+
+                  <div class="role-permission-grid">
+                    <% permissionCatalog.forEach(permission => { %>
+                      <label class="role-permission-option">
+                        <input
+                          type="checkbox"
+                          name="permissions"
+                          value="<%= permission.key %>"
+                          <%= (role.permissions || []).includes(permission.key) ? "checked" : "" %>
+                        >
+                        <span>
+                          <strong><%= permission.label %></strong>
+                          <small><%= permission.description %></small>
+                        </span>
+                      </label>
+                    <% }) %>
+                  </div>
+
+                  <button class="button primary" type="submit">Rollenrechte speichern</button>
+                </form>
+
+                <% if (!role.system) { %>
+                  <form method="post" action="/admin/roles/<%= role.id %>/delete"
+                    onsubmit="return confirm('Rolle „<%= role.name %>“ wirklich löschen? Zugewiesene Mitglieder werden zu „Mitglied“.')">
+                    <button class="button danger" type="submit">Rolle löschen</button>
+                  </form>
+                <% } else { %>
+                  <p class="field-help">Systemrollen können nicht gelöscht oder umbenannt werden. Ihre Rechte kannst du anpassen.</p>
+                <% } %>
+              <% } %>
+            </article>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+<section class="dashboard-stats" id="bewerbungen-kontakt">
+      <article class="stat-card"><strong><%= data.members.length %></strong><span>Mitglieder</span></article>
+      <article class="stat-card"><strong><%= (data.applications || []).filter(item => item.status === "offen").length %></strong><span>Offene Bewerbungen</span></article>
+      <article class="stat-card"><strong><%= (data.contactMessages || []).filter(item => item.status !== "erledigt").length %></strong><span>Offene Nachrichten</span></article>
+      <article class="stat-card"><strong><%= (data.events || []).reduce((sum, event) => sum + (event.registrations || []).length, 0) %></strong><span>Event-Anmeldungen</span></article>
+    </section>
+
+
+    <section class="admin-grid" id="gruppenverwaltung">
+      <div class="panel" id="gruppen-inhalte">
+        <h2 style="font-size:2rem">Gruppeninhalte bearbeiten</h2>
+        <p class="field-help">Name und Logo werden jetzt in der Branding-Zentrale verwaltet. Hier änderst du Leitsatz, Beschreibung und Startseitenbanner.</p>
+        <form method="post" action="/admin/group" enctype="multipart/form-data">
+<label>Leitsatz
+            <input name="tagline" value="<%= data.group.tagline %>">
+          </label>
+          <label>Beschreibung
+            <textarea name="description" rows="5"><%= data.group.description %></textarea>
+          </label>
+<label>Gruppenbanner, optional
+            <input name="groupBanner" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+          </label>
+          <button class="button primary" type="submit">Gruppeninhalte speichern</button>
+        </form>
+      </div>
+
+      <div class="panel" id="mitglied-anlegen">
+        <h2 style="font-size:2rem">Mitglied hinzufügen</h2>
+        <div class="info-box">
+          <strong>Rollen sorgfältig vergeben</strong>
+          <p><b>Gründer:</b> vollständiger Zugriff. Alle anderen Rollen erhalten nur die Rechte, die du unter „Rollen & Rechte“ freigeschaltet hast.</p>
+          <p>Vergib die Gründerrolle nur an vollständig vertrauenswürdige Personen.</p>
+        </div>
+        <form method="post" action="/admin/member" enctype="multipart/form-data">
+          <div class="row">
+            <label>Name
+              <input name="name" required>
+            </label>
+            <% if (access.isFounder) { %>
+              <label>Rolle
+                <select name="roleId" required>
+                  <% (data.roles || []).forEach(role => { %>
+                    <option value="<%= role.id %>" <%= role.id === "member" ? "selected" : "" %>><%= role.name %></option>
+                  <% }) %>
+                </select>
+              </label>
+            <% } else { %>
+              <input name="roleId" type="hidden" value="member">
+            <% } %>
+          </div>
+          <label>Stream-Titel
+            <input name="streamTitle">
+          </label>
+          <label>Beschreibung
+            <textarea name="bio" rows="4" maxlength="200" data-bio-field required></textarea>
+            <small class="field-help"><span data-bio-count>0</span>/200 Zeichen</small>
+          </label>
+          <label>Tags, durch Komma getrennt
+            <input name="tags" placeholder="Minecraft, Deutsch, Strategie">
+          </label>
+          <label>Streamzeiten, durch Komma getrennt
+            <input name="schedule" placeholder="Dienstag 20:00, Freitag 21:00">
+          </label>
+          <div class="row">
+            <label>Twitch-Kanalname
+              <input name="twitchLogin" placeholder="jokoder">
+            </label>
+            <label>Twitch-Link
+              <input name="twitch" type="url" placeholder="https://twitch.tv/jokoder">
+            </label>
+          </div>
+          <div class="row">
+            <label>YouTube
+              <input name="youtube" type="url">
+            </label>
+          </div>
+          <label>TikTok
+            <input name="tiktok" type="url">
+          </label>
+          <div class="row">
+            <label>Farbe 1
+              <input name="color1" type="color" value="#9b6cff">
+            </label>
+            <label>Farbe 2
+              <input name="color2" type="color" value="#36d9c4">
+            </label>
+          </div>
+          <label>Avatar-Bild, maximal 5 MB
+            <input name="avatar" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+          </label>
+          <label style="display:flex;grid-template-columns:auto 1fr;align-items:center">
+            <input name="live" type="checkbox" style="width:auto">
+            Mitglied ist gerade live
+          </label>
+          <button class="button primary" type="submit">Mitglied speichern</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="admin-grid section" id="eventsverwaltung">
+      <div class="panel">
+        <h2 style="font-size:2rem">Event hinzufügen</h2>
+        <p class="field-help">Datum und Uhrzeit werden genau so angezeigt, wie sie eingetragen werden. Eine automatische Zeitzonenumrechnung findet derzeit nicht statt.</p>
+        <form method="post" action="/admin/event">
+          <label>Titel
+            <input name="title" required placeholder="Nexus Community Night">
+          </label>
+          <div class="row">
+            <label>Datum
+              <input name="date" type="date" required>
+            </label>
+            <label>Uhrzeit
+              <input name="time" type="time" required>
+            </label>
+          </div>
+          <label>Beschreibung
+            <textarea name="description" rows="4"></textarea>
+          </label>
+          <button class="button primary" type="submit">Event speichern</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h2 style="font-size:2rem">Geplante Events</h2>
+        <div style="display:grid;gap:.7rem">
+          <% (data.events || []).forEach(event => { %>
+            <article class="member-row event-admin-row">
+              <div>
+                <strong><%= event.title %></strong><br>
+                <small><%= event.date %> · <%= event.time %></small>
+              </div>
+              <form method="post" action="/admin/event/<%= event.id %>/delete" onsubmit="return confirm('Event wirklich löschen?')">
+                <button class="button danger small" type="submit">Löschen</button>
+              </form>
+            </article>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="mitgliederverwaltung">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Verwaltung</span>
+          <h2>Vorhandene Mitglieder</h2>
+        </div>
+      </div>
+
+      <div style="display:grid;gap:.7rem">
+        <% data.members.forEach(member => { %>
+          <article class="member-row">
+            <div class="avatar" style="--a:<%= member.color1 %>;--b:<%= member.color2 %>">
+              <% if (member.avatar) { %><img src="<%= member.avatar %>" alt=""><% } else { %><%= member.name.charAt(0) %><% } %>
+            </div>
+            <div>
+              <strong><%= member.name %></strong><br>
+              <small>
+                <% const memberRoleDef = (data.roles || []).find(role => role.id === (member.roleId || "member")); %>
+                <span class="member-role-badge" style="--role-color:<%= memberRoleDef?.color || '#9b6cff' %>"><%= member.role %></span>
+                · <%= member.live ? "Live" : "Offline" %>
+              </small>
+            </div>
+            <div class="actions">
+              <a class="button small primary" href="/admin/member/<%= member.id %>/edit">Bearbeiten</a>
+              <form method="post" action="/admin/member/<%= member.id %>/toggle-live">
+                <button class="button small" type="submit"><%= member.live ? "Offline setzen" : "Live setzen" %></button>
+              </form>
+              <% if (roleCan("members.delete") && (member.roleId || "member") !== "founder") { %>
+                <form method="post" action="/admin/member/<%= member.id %>/delete" onsubmit="return confirm('Mitglied wirklich endgültig löschen?')">
+                  <button class="button danger small" type="submit">Löschen</button>
+                </form>
+              <% } else if ((member.roleId || "member") === "founder") { %>
+                <span class="protected-founder" title="Gründerprofile sind vor dem Löschen geschützt">🔒 Geschützt</span>
+              <% } %>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+
+
+    <section class="admin-grid section" id="json-backups">
+      <div class="panel">
+        <span class="eyebrow">Datensicherung</span>
+        <h2 style="font-size:2rem">Backup exportieren</h2>
+        <p>Lädt Mitglieder, Events, Bewerbungen und Gruppeneinstellungen als JSON-Datei herunter.</p>
+        <div class="warning-box">
+          <strong>Vertrauliche Datei</strong>
+          <p>Das Backup kann Mitgliederprofile, Bewerbungen, Kontaktanfragen und andere personenbezogene Daten enthalten. Bewahre es geschützt auf und sende es nicht unverschlüsselt weiter.</p>
+        </div>
+        <a class="button primary" href="/admin/backup">Backup herunterladen</a>
+      </div>
+
+      <div class="panel">
+        <span class="eyebrow">Wiederherstellung</span>
+        <h2 style="font-size:2rem">Backup importieren</h2>
+        <p>Ersetzt die aktuellen Daten durch eine zuvor exportierte Backup-Datei.</p>
+        <div class="danger-box">
+          <strong>Achtung: vollständiges Ersetzen</strong>
+          <p>Der Import überschreibt den aktuellen Datenstand. Lade unmittelbar vorher ein neues Backup herunter.</p>
+        </div>
+        <form method="post" action="/admin/restore" enctype="multipart/form-data" onsubmit="return confirm('Aktuelle Daten wirklich durch dieses Backup ersetzen?')">
+          <label>Backup-Datei
+            <input name="backupFile" type="file" accept="application/json,.json" required>
+          </label>
+          <button class="button danger" type="submit">Backup wiederherstellen</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="section" id="bewerbungenverwaltung">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Neue Anfragen</span>
+          <h2>Bewerbungen</h2>
+          <p class="field-help">Interne Notizen bleiben im Verwaltungsteam. Beim Annehmen entsteht ein Profil, der Kontozugang wird separat eingerichtet.</p>
+        </div>
+        <p><%= (data.applications || []).length %> Bewerbung<%= (data.applications || []).length === 1 ? "" : "en" %></p>
+      </div>
+
+      <% if ((data.applications || []).length === 0) { %>
+        <div class="panel empty-state">
+          <h3>Noch keine Bewerbungen vorhanden.</h3>
+          <p>Eingehende Bewerbungen erscheinen hier automatisch.</p>
+        </div>
+      <% } else { %>
+        <div class="application-list">
+          <% [...data.applications].reverse().forEach(application => { %>
+            <article class="panel application-card">
+              <div class="application-head">
+                <div class="application-person">
+                  <div class="avatar small-avatar" style="--a:#9b6cff;--b:#36d9c4">
+                    <% if (application.avatar) { %>
+                      <img src="<%= application.avatar %>" alt="">
+                    <% } else { %>
+                      <%= application.name.charAt(0).toUpperCase() %>
+                    <% } %>
+                  </div>
+                  <div>
+                    <h3>
+                      <a class="admin-item-link" href="/admin/application/<%= application.id %>">
+                        <%= application.name %>
+                      </a>
+                    </h3>
+                    <small><%= application.platform %> · Status: <%= application.status %></small>
+                  </div>
+                </div>
+                <span class="application-date"><%= new Date(application.createdAt).toLocaleString("de-DE") %></span>
+              </div>
+
+              <p><strong>Kanal:</strong> <a href="<%= application.channelUrl %>" target="_blank" rel="noopener"><%= application.channelUrl %></a></p>
+              <% if (application.discord) { %><p><strong>Discord:</strong> <%= application.discord %></p><% } %>
+              <% if (application.age) { %><p><strong>Alter:</strong> <%= application.age %></p><% } %>
+              <p><%= application.message %></p>
+
+              <div class="actions"><a class="button small primary" href="/admin/application/<%= application.id %>">Bewerbung öffnen</a></div>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+
+  
+    <section class="admin-grid section" id="rechtliches-anfragen">
+      <div class="panel" id="rechtliches">
+        <span class="eyebrow">Rechtliche Angaben</span>
+        <p class="field-help">Diese Angaben sind öffentlich sichtbar und sollten vor dem Onlinegang vollständig und korrekt ausgefüllt werden.</p>
+        <h2 style="font-size:2rem">Impressum & Datenschutz</h2>
+        <form method="post" action="/admin/legal">
+          <label>Betreibername
+            <input name="operatorName" value="<%= data.legal?.operatorName || "" %>">
+          </label>
+          <label>Ladungsfähige Anschrift
+            <textarea name="address" rows="4"><%= data.legal?.address || "" %></textarea>
+          </label>
+          <label>Kontakt-E-Mail
+            <input name="email" type="email" value="<%= data.legal?.email || "" %>">
+          </label>
+          <label>Verantwortliche Person
+            <input name="responsible" value="<%= data.legal?.responsible || "" %>">
+          </label>
+          <label>Datenschutz-Kontakt
+            <textarea name="privacyContact" rows="3"><%= data.legal?.privacyContact || "" %></textarea>
+          </label>
+          <button class="button primary" type="submit">Rechtliche Angaben speichern</button>
+        </form>
+      </div>
+
+      <div class="panel" id="kontaktanfragen">
+        <span class="eyebrow">Kontaktanfragen</span>
+        <h2 style="font-size:2rem">Posteingang</h2>
+        <div class="contact-list">
+          <% if (!(data.contactMessages || []).length) { %>
+            <p>Noch keine Kontaktanfragen vorhanden.</p>
+          <% } %>
+          <% [...(data.contactMessages || [])].reverse().forEach(contact => { %>
+            <article class="contact-card">
+              <div class="contact-card-head">
+                <div>
+                  <strong>
+                    <a class="admin-item-link" href="/admin/contact/<%= contact.id %>">
+                      <%= contact.subject %>
+                    </a>
+                  </strong>
+                  <small>
+                    <%= contact.name %> ·
+                    <%= (contact.contactMethod || "email") === "discord"
+                      ? "Discord-DM"
+                      : (contact.email || "E-Mail") %> ·
+                    <%= contact.status %>
+                  </small>
+                </div>
+                <span class="application-date">
+                  <%= new Date(contact.createdAt).toLocaleString("de-DE") %>
+                </span>
+              </div>
+
+              <p class="message-preview">
+                <%= String(contact.message || "").length > 180
+                  ? String(contact.message).slice(0, 180) + "…"
+                  : contact.message %>
+              </p>
+
+              <div class="actions">
+                <a class="button small primary" href="/admin/contact/<%= contact.id %>">
+                  Kontaktanfrage öffnen
+                </a>
+                <form method="post" action="/admin/contact/<%= contact.id %>/status">
+                  <input type="hidden" name="status" value="erledigt">
+                  <button class="button small" type="submit">Als erledigt markieren</button>
+                </form>
+                <form method="post" action="/admin/contact/<%= contact.id %>/delete"
+                  onsubmit="return confirm('Kontaktanfrage wirklich löschen?')">
+                  <button class="button danger small" type="submit">Löschen</button>
+                </form>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+
+  
+    <section class="admin-grid section" id="newsverwaltung">
+      <div class="panel">
+        <span class="eyebrow">Community-Redaktion</span>
+        <h2 style="font-size:2rem">News erstellen</h2>
+        <div class="info-box">
+          <p>Veröffentlichte News sind sofort öffentlich sichtbar. Deaktiviere „veröffentlicht“, um zunächst einen Entwurf vorzubereiten.</p>
+          <p>Der Autorenname wird öffentlich unter dem Beitrag angezeigt.</p>
+        </div>
+        <form method="post" action="/admin/news">
+          <label>Titel<input name="title" required maxlength="180"></label>
+          <label>Kurzbeschreibung<input name="summary" maxlength="300"></label>
+          <label>Inhalt<textarea name="content" rows="8" required maxlength="10000"></textarea></label>
+          <label>Autor<input name="author" value="Jokoder" maxlength="100"></label>
+          <label class="checkbox-label">
+            <input name="published" type="checkbox" checked>
+            Direkt veröffentlichen
+          </label>
+          <button class="button primary" type="submit">News speichern</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <span class="eyebrow">Veröffentlichte Inhalte</span>
+        <h2 style="font-size:2rem">News verwalten</h2>
+        <div class="contact-list">
+          <% (data.news || []).forEach(article => { %>
+            <article class="contact-card">
+              <strong><%= article.title %></strong>
+              <small><%= article.published ? "Veröffentlicht" : "Entwurf" %> · <%= new Date(article.createdAt).toLocaleDateString("de-DE") %></small>
+              <div class="actions">
+                <form method="post" action="/admin/news/<%= article.id %>/toggle">
+                  <button class="button small" type="submit"><%= article.published ? "Ausblenden" : "Veröffentlichen" %></button>
+                </form>
+                <form method="post" action="/admin/news/<%= article.id %>/delete" onsubmit="return confirm('News wirklich löschen?')">
+                  <button class="button danger small" type="submit">Löschen</button>
+                </form>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="eventanmeldungen">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Event-Verwaltung</span>
+          <h2>Teilnahmeanmeldungen</h2>
+        </div>
+      </div>
+
+      <div class="registration-admin-list">
+        <% (data.events || []).forEach(event => { %>
+          <article class="panel">
+            <h3><%= event.title %></h3>
+            <p><%= event.date %> · <%= event.time %></p>
+
+            <% if (!(event.registrations || []).length) { %>
+              <p>Noch keine Anmeldungen.</p>
+            <% } %>
+
+            <% (event.registrations || []).forEach(registration => { %>
+              <div class="registration-admin-row">
+                <div>
+                  <strong><%= registration.name %></strong><br>
+                  <small><%= registration.email %> · <%= registration.status %></small>
+                  <% if (registration.note) { %><p><%= registration.note %></p><% } %>
+                </div>
+                <div class="actions">
+                  <form method="post" action="/admin/event/<%= event.id %>/registration/<%= registration.id %>/status">
+                    <input type="hidden" name="status" value="bestaetigt">
+                    <button class="button small primary" type="submit">Bestätigen</button>
+                  </form>
+                  <form method="post" action="/admin/event/<%= event.id %>/registration/<%= registration.id %>/status">
+                    <input type="hidden" name="status" value="abgesagt">
+                    <button class="button small" type="submit">Absagen</button>
+                  </form>
+                  <form method="post" action="/admin/event/<%= event.id %>/registration/<%= registration.id %>/delete" onsubmit="return confirm('Anmeldung löschen?')">
+                    <button class="button danger small" type="submit">Löschen</button>
+                  </form>
+                </div>
+              </div>
+            <% }) %>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Systemchronik</span>
+          <h2>Letzte Aktivitäten</h2>
+        </div>
+      </div>
+      <div class="activity-list">
+        <% (data.activityLog || []).slice(0, 20).forEach(activity => { %>
+          <article class="activity-row">
+            <span class="activity-dot"></span>
+            <div>
+              <strong><%= activity.message %></strong>
+              <small><%= new Date(activity.createdAt).toLocaleString("de-DE") %></small>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+
+    </div>
+  </main>
+
+<script>
+(() => {
+  const preview = document.querySelector(".site-background-preview");
+  const mode = document.getElementById("siteBackgroundMode");
+  const color1 = document.getElementById("siteBgColor1");
+  const color2 = document.getElementById("siteBgColor2");
+  const overlay = document.getElementById("siteBgOverlay");
+  const output = document.getElementById("overlayValue");
+
+  if (!preview || !mode || !color1 || !color2 || !overlay) return;
+
+  function updatePreview() {
+    preview.dataset.mode = mode.value;
+    preview.style.setProperty("--bg-one", color1.value);
+    preview.style.setProperty("--bg-two", color2.value);
+    preview.style.setProperty("--bg-overlay", Number(overlay.value) / 100);
+    output.textContent = `${overlay.value}%`;
+  }
+
+  [mode, color1, color2, overlay].forEach(element => {
+    element.addEventListener("input", updatePreview);
+    element.addEventListener("change", updatePreview);
+  });
+
+  updatePreview();
+})();
+</script>
+
+
+<script>
+(() => {
+  const preview = document.getElementById("designStudioPreview");
+  if (!preview) return;
+
+  const font = document.getElementById("designFontFamily");
+  const baseSize = document.getElementById("designBaseSize");
+  const headingScale = document.getElementById("designHeadingScale");
+  const textAlign = document.getElementById("designTextAlign");
+  const heroAlign = document.getElementById("designHeroAlign");
+  const width = document.getElementById("designContentWidth");
+  const spacing = document.getElementById("designSectionSpacing");
+  const cardRadius = document.getElementById("designCardRadius");
+  const buttonRadius = document.getElementById("designButtonRadius");
+  const opacity = document.getElementById("designCardOpacity");
+  const navStyle = document.getElementById("designNavStyle");
+
+  const outputs = {
+    baseSize: document.getElementById("baseSizeValue"),
+    headingScale: document.getElementById("headingScaleValue"),
+    width: document.getElementById("contentWidthValue"),
+    spacing: document.getElementById("sectionSpacingValue"),
+    cardRadius: document.getElementById("cardRadiusValue"),
+    buttonRadius: document.getElementById("buttonRadiusValue"),
+    opacity: document.getElementById("cardOpacityValue")
+  };
+
+  const fonts = {
+    system: 'Inter, system-ui, sans-serif',
+    modern: '"Trebuchet MS", sans-serif',
+    rounded: '"Arial Rounded MT Bold", "Trebuchet MS", sans-serif',
+    editorial: 'Georgia, serif',
+    mono: '"Cascadia Code", Consolas, monospace'
+  };
+
+  function update() {
+    preview.style.fontFamily = fonts[font.value] || fonts.system;
+    preview.style.fontSize = `${baseSize.value}px`;
+    preview.style.setProperty("--preview-heading-scale", Number(headingScale.value) / 100);
+    preview.style.setProperty("--preview-card-radius", `${cardRadius.value}px`);
+    preview.style.setProperty("--preview-button-radius", `${buttonRadius.value}px`);
+    preview.style.setProperty("--preview-card-opacity", Number(opacity.value) / 100);
+    preview.style.setProperty("--preview-section-space", `${Math.max(20, Number(spacing.value) / 3)}px`);
+    preview.dataset.textAlign = textAlign.value;
+    preview.dataset.heroAlign = heroAlign.value;
+    preview.dataset.navStyle = navStyle.value;
+
+    outputs.baseSize.textContent = `${baseSize.value} px`;
+    outputs.headingScale.textContent = `${headingScale.value}%`;
+    outputs.width.textContent = `${width.value} px`;
+    outputs.spacing.textContent = `${spacing.value} px`;
+    outputs.cardRadius.textContent = `${cardRadius.value} px`;
+    outputs.buttonRadius.textContent = `${buttonRadius.value} px`;
+    outputs.opacity.textContent = `${opacity.value}%`;
+  }
+
+  [font, baseSize, headingScale, textAlign, heroAlign, width, spacing,
+   cardRadius, buttonRadius, opacity, navStyle].forEach(element => {
+    element.addEventListener("input", update);
+    element.addEventListener("change", update);
+  });
+
+  update();
+})();
+</script>
+
+
+<script>
+(() => {
+  document.querySelectorAll("[data-bio-field]").forEach(field => {
+    const counter = field.parentElement.querySelector("[data-bio-count]");
+    const update = () => {
+      if (counter) counter.textContent = field.value.length;
+    };
+    field.addEventListener("input", update);
+    update();
+  });
+})();
+</script>
+
+
+<script>
+(() => {
+  const preview = document.getElementById("animationPreviewCard");
+  const enabled = document.getElementById("animationEnabled");
+  const type = document.getElementById("animationType");
+  const speed = document.getElementById("animationSpeed");
+  const intensity = document.getElementById("animationIntensity");
+  const intensityValue = document.getElementById("animationIntensityValue");
+
+  if (!preview || !enabled || !type || !speed || !intensity) return;
+
+  function duration() {
+    return speed.value === "slow" ? 1000 :
+      speed.value === "fast" ? 350 :
+      650;
+  }
+
+  function startingTransform() {
+    const strength = Number(intensity.value) / 100;
+    const move = Math.round(32 * strength);
+
+    switch (type.value) {
+      case "slide-left":
+        return `translateX(-${move}px)`;
+      case "slide-right":
+        return `translateX(${move}px)`;
+      case "zoom":
+        return `scale(${Math.max(.84, 1 - .09 * strength)})`;
+      case "float":
+        return `translateY(${Math.round(20 * strength)}px) scale(.98)`;
+      case "fade":
+        return "none";
+      case "fade-up":
+      default:
+        return `translateY(${move}px)`;
+    }
+  }
+
+  function playPreview() {
+    intensityValue.textContent = `${intensity.value}%`;
+
+    preview.getAnimations().forEach(animation => animation.cancel());
+    preview.style.transition = "none";
+    preview.style.opacity = enabled.checked ? "0" : "1";
+    preview.style.transform = enabled.checked ? startingTransform() : "none";
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        preview.style.transition =
+          `opacity ${duration()}ms ease, transform ${duration()}ms cubic-bezier(.2,.7,.2,1)`;
+        preview.style.opacity = "1";
+        preview.style.transform = "none";
+      });
+    });
+  }
+
+  [enabled, type, speed, intensity].forEach(element => {
+    element.addEventListener("input", playPreview);
+    element.addEventListener("change", playPreview);
+  });
+
+  document.getElementById("animationPreview")
+    ?.addEventListener("click", playPreview);
+
+  playPreview();
+})();
+</script>
+
+
+<script>
+(() => {
+  const visibility = document.getElementById("teamEventVisibility");
+  const members = document.getElementById("privateEventMembers");
+
+  if (!visibility || !members) return;
+
+  function updatePrivateMembers() {
+    const isPrivate = visibility.value === "private";
+    members.hidden = !isPrivate;
+    members.querySelectorAll("input").forEach(input => {
+      input.disabled = !isPrivate;
+    });
+  }
+
+  visibility.addEventListener("change", updatePrivateMembers);
+  updatePrivateMembers();
+})();
+</script>
+
+
+
+
+
+<script>
+(() => {
+  const visibility = document.getElementById("pollVisibility");
+  const members = document.getElementById("pollMembersField");
+
+  if (!visibility || !members) return;
+
+  function updatePollMembers() {
+    members.hidden = visibility.value !== "selected";
+    members.querySelectorAll("input").forEach(input => {
+      input.disabled = members.hidden;
+    });
+  }
+
+  visibility.addEventListener("change", updatePollMembers);
+  updatePollMembers();
+})();
+</script>
+
+
+
+
+<script>
+(() => {
+  const fields = {
+    siteName: document.getElementById("brandingSiteName"),
+    subtitle: document.getElementById("brandingSubtitle"),
+    abbreviation: document.getElementById("brandingAbbreviation"),
+    browserTitle: document.getElementById("brandingBrowserTitle"),
+    adminName: document.getElementById("brandingAdminName"),
+    adminAbbreviation: document.getElementById("brandingAdminAbbreviation"),
+    footerName: document.getElementById("brandingFooterName")
+  };
+
+  const output = {
+    siteName: document.getElementById("brandingPreviewName"),
+    subtitle: document.getElementById("brandingPreviewSubtitle"),
+    abbreviation: document.getElementById("brandingPreviewAbbreviation"),
+    browserTitle: document.getElementById("brandingPreviewBrowserTitle"),
+    adminName: document.getElementById("brandingPreviewAdminName"),
+    adminAbbreviation: document.getElementById("brandingPreviewAdminMark"),
+    footerName: document.getElementById("brandingPreviewFooterName")
+  };
+
+  const logoShell = document.getElementById("brandingPreviewLogo");
+  const faviconShell = document.getElementById("brandingPreviewFavicon");
+  const logoInput = document.getElementById("brandingLogoInput");
+  const faviconInput = document.getElementById("brandingFaviconInput");
+
+  if (!fields.siteName || !output.siteName) return;
+
+  function valueOr(element, fallback) {
+    return String(element?.value || "").trim() || fallback;
+  }
+
+  function updateTextPreview() {
+    const siteName = valueOr(fields.siteName, "Website");
+    const abbreviation = valueOr(fields.abbreviation, "VN").slice(0, 5).toUpperCase();
+
+    output.siteName.textContent = siteName;
+    output.subtitle.textContent = valueOr(fields.subtitle, "Community Hub");
+    output.browserTitle.textContent = valueOr(fields.browserTitle, siteName);
+    output.adminName.textContent = valueOr(fields.adminName, "Admin");
+    output.adminAbbreviation.textContent =
+      valueOr(fields.adminAbbreviation, abbreviation).slice(0, 5).toUpperCase();
+    output.footerName.textContent = valueOr(fields.footerName, siteName);
+
+    if (output.abbreviation) {
+      output.abbreviation.textContent = abbreviation;
+    }
+
+    if (faviconShell && !faviconShell.querySelector("img")) {
+      faviconShell.textContent = abbreviation;
+    }
+  }
+
+  Object.values(fields).forEach(field => {
+    field?.addEventListener("input", updateTextPreview);
+  });
+
+  function previewImage(input, shell, fallbackText) {
+    const file = input?.files?.[0];
+    if (!file || !shell) return;
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      shell.innerHTML = "";
+      const image = document.createElement("img");
+      image.src = String(reader.result || "");
+      image.alt = "";
+      shell.appendChild(image);
+    });
+    reader.readAsDataURL(file);
+  }
+
+  logoInput?.addEventListener("change", () => {
+    previewImage(
+      logoInput,
+      logoShell,
+      valueOr(fields.abbreviation, "VN")
+    );
+  });
+
+  faviconInput?.addEventListener("change", () => {
+    previewImage(
+      faviconInput,
+      faviconShell,
+      valueOr(fields.abbreviation, "VN")
+    );
+  });
+
+  updateTextPreview();
+})();
+</script>
+
+
+<script>
+(() => {
+  const preview = document.getElementById("headerDesignPreview");
+  const mode = document.getElementById("headerDesignMode");
+  const color1 = document.getElementById("headerColor1");
+  const color2 = document.getElementById("headerColor2");
+  const accent1 = document.getElementById("headerAccent1");
+  const accent2 = document.getElementById("headerAccent2");
+  const overlay = document.getElementById("headerOverlay");
+  const blur = document.getElementById("headerBlur");
+  const shadow = document.getElementById("headerShadow");
+  const imageInput = document.getElementById("headerBackgroundImage");
+  const overlayValue = document.getElementById("headerOverlayValue");
+  const blurValue = document.getElementById("headerBlurValue");
+
+  if (
+    !preview || !mode || !color1 || !color2 ||
+    !accent1 || !accent2 || !overlay || !blur
+  ) return;
+
+  let temporaryImage = "";
+
+  function updatePreview() {
+    preview.dataset.mode = mode.value;
+    preview.style.setProperty("--header-one", color1.value);
+    preview.style.setProperty("--header-two", color2.value);
+    preview.style.setProperty("--header-accent-one", accent1.value);
+    preview.style.setProperty("--header-accent-two", accent2.value);
+    preview.style.setProperty("--header-overlay", Number(overlay.value) / 100);
+    preview.style.setProperty("--header-blur", `${blur.value}px`);
+    preview.classList.toggle("without-shadow", !shadow?.checked);
+
+    const currentImage = temporaryImage || preview.dataset.currentImage || "";
+    if (currentImage) {
+      preview.style.setProperty("--header-image", `url("${currentImage}")`);
+    } else {
+      preview.style.removeProperty("--header-image");
+    }
+
+    overlayValue.textContent = `${overlay.value}%`;
+    blurValue.textContent = `${blur.value} px`;
+  }
+
+  [
+    mode, color1, color2, accent1, accent2,
+    overlay, blur, shadow
+  ].forEach(element => {
+    element?.addEventListener("input", updatePreview);
+    element?.addEventListener("change", updatePreview);
+  });
+
+  imageInput?.addEventListener("change", () => {
+    const file = imageInput.files?.[0];
+    if (!file) {
+      temporaryImage = "";
+      updatePreview();
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      temporaryImage = String(reader.result || "");
+      mode.value = "image";
+      updatePreview();
+    });
+    reader.readAsDataURL(file);
+  });
+
+  updatePreview();
+})();
+</script>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const sideLinks = Array.from(
+        document.querySelectorAll(".admin-side-nav a[href^='#']")
+      );
+
+      const sections = sideLinks
+        .map(link => {
+          const id = link.getAttribute("href").slice(1);
+          const section = document.getElementById(id);
+          return section ? { link, section } : null;
+        })
+        .filter(Boolean);
+
+      const setActiveLink = activeLink => {
+        sideLinks.forEach(link => {
+          const isActive = link === activeLink;
+          link.classList.toggle("is-active", isActive);
+          if (isActive) {
+            link.setAttribute("aria-current", "location");
+          } else {
+            link.removeAttribute("aria-current");
+          }
+        });
+      };
+
+      if (sections.length && "IntersectionObserver" in window) {
+        const observer = new IntersectionObserver(
+          entries => {
+            const visible = entries
+              .filter(entry => entry.isIntersecting)
+              .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+
+            if (!visible.length) return;
+
+            const match = sections.find(
+              item => item.section === visible[0].target
+            );
+
+            if (match) setActiveLink(match.link);
+          },
+          {
+            rootMargin: "-18% 0px -68% 0px",
+            threshold: [0, 0.1, 0.3]
+          }
+        );
+
+        sections.forEach(item => observer.observe(item.section));
+      }
+
+      sideLinks.forEach(link => {
+        link.addEventListener("click", () => setActiveLink(link));
+      });
+
+      const currentHash = window.location.hash;
+      const initialLink = currentHash
+        ? sideLinks.find(link => link.getAttribute("href") === currentHash)
+        : sideLinks[0];
+
+      if (initialLink) setActiveLink(initialLink);
+    });
+  </script>
+
+</body>
+</html>

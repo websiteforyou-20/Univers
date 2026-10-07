@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+  <%- include("partials/header", { data }) %>
+
+  <main>
+    <section class="hero <%= data.group.banner ? "hero-with-banner" : "" %>" <% if (data.group.banner) { %>style="background-image:linear-gradient(rgba(8,10,20,.45),rgba(8,10,20,.88)),url('<%= data.group.banner %>')"<% } %>>
+      <span class="eyebrow"><%= data.group.tagline %></span>
+      <h1><%= data.group.name %></h1>
+      <p><%= data.group.description %></p>
+      <div class="actions">
+        <a class="button primary" href="#members">Team entdecken</a>
+        <a class="button" href="/admin">Admin öffnen</a>
+      </div>
+    </section>
+
+    <section class="section" id="members">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Unsere Crew</span>
+          <h2>Mitglieder</h2>
+        </div>
+        <p><%= data.members.length %> Mitglied<%= data.members.length === 1 ? "" : "er" %></p>
+      </div>
+
+      <div class="grid">
+        <% data.members.forEach(member => { %>
+          <article class="card">
+            <div class="avatar" style="--a:<%= member.color1 %>;--b:<%= member.color2 %>">
+              <% if (member.avatar) { %>
+                <img src="<%= member.avatar %>" alt="Avatar von <%= member.name %>">
+              <% } else { %>
+                <%= member.name.charAt(0).toUpperCase() %>
+              <% } %>
+            </div>
+
+            <span class="status <%= member.effectiveLive ? "live" : "" %>">
+              <%= member.effectiveLive ? "Gerade live" : "Offline" %>
+            </span>
+
+            <h3><%= member.name %></h3>
+            <strong><%= member.role %></strong>
+            <p><%= member.bio %></p>
+
+            <div class="tags">
+              <% member.tags.forEach(tag => { %><span class="tag"><%= tag %></span><% }) %>
+            </div>
+
+            <div class="links">
+              <a class="button small primary" href="/member/<%= member.id %>">Profil</a>
+              <% if (member.twitch) { %><a class="button small" href="<%= member.twitch %>" target="_blank" rel="noopener">Twitch</a><% } %>
+              <% if (member.youtube) { %><a class="button small" href="<%= member.youtube %>" target="_blank" rel="noopener">YouTube</a><% } %>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+  
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Neuigkeiten</span>
+          <h2>Aus dem Nexus</h2>
+        </div>
+        <a class="button" href="/news">Alle News ansehen</a>
+      </div>
+
+      <div class="news-grid">
+        <% [...(data.news || [])].filter(item => item.published).slice(0, 3).forEach(article => { %>
+          <article class="card news-card">
+            <span class="news-date"><%= new Date(article.createdAt).toLocaleDateString("de-DE") %></span>
+            <h3><%= article.title %></h3>
+            <p><%= article.summary || article.content.slice(0, 150) %></p>
+            <a class="button small" href="/news/<%= article.id %>">Weiterlesen</a>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+
+  
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Demnächst</span>
+          <h2>Nächste Events</h2>
+        </div>
+        <a class="button" href="/events">Alle Events</a>
+      </div>
+
+      <div class="event-grid">
+        <% [...(data.events || [])].sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)).slice(0, 3).forEach(event => { %>
+          <article class="card event-card">
+            <span class="event-date"><%= event.date %> · <%= event.time %></span>
+            <h3><%= event.title %></h3>
+            <p><%= event.description %></p>
+            <div class="actions">
+              <a class="button small primary" href="/events/<%= event.id %>">Details</a>
+              <a class="button small" href="/events/<%= event.id %>/calendar.ics">Kalender</a>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </section>
+
+  </main>
+
+  <%- include("partials/footer", { data }) %>
+</body>
+</html>

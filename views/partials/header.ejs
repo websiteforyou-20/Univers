@@ -1,0 +1,888 @@
+
+<%
+  const siteBranding = data.group.branding || {
+    siteName: data.group.name || "VTuber Nexus",
+    subtitle: "Community Hub",
+    abbreviation: "VN",
+    logo: data.group.logo || ""
+  };
+
+  const visibleSiteName =
+    siteBranding.siteName || data.group.name || "VTuber Nexus";
+
+  const visibleBrandSubtitle =
+    siteBranding.subtitle || "Community Hub";
+
+  const visibleBrandAbbreviation =
+    siteBranding.abbreviation || "VN";
+
+  const visibleBrandLogo =
+    siteBranding.logo || data.group.logo || "";
+%>
+
+
+<%
+  const siteAnimations = data.group.siteAnimations || {
+    enabled: true,
+    type: "fade-up",
+    speed: "normal",
+    intensity: 100,
+    trigger: "viewport",
+    stagger: true,
+    hoverEffects: true
+  };
+
+  const animationDurations = {
+    slow: "1000ms",
+    normal: "650ms",
+    fast: "350ms"
+  };
+%>
+<style>
+  :root {
+    --site-animation-duration: <%= animationDurations[siteAnimations.speed] || "650ms" %>;
+    --site-animation-intensity: <%= Number(siteAnimations.intensity || 100) / 100 %>;
+  }
+
+  <% if (siteAnimations.enabled && siteAnimations.hoverEffects) { %>
+    .panel,
+    .member-card,
+    .application-card,
+    .contact-card,
+    .dashboard-card,
+    .button {
+      transition:
+        transform 220ms ease,
+        box-shadow 220ms ease,
+        border-color 220ms ease,
+        opacity 220ms ease;
+    }
+
+    .panel:hover,
+    .member-card:hover,
+    .application-card:hover,
+    .contact-card:hover,
+    .dashboard-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, .22);
+    }
+
+    .button:hover {
+      transform: translateY(-1px) scale(1.01);
+    }
+  <% } %>
+
+  <% if (!siteAnimations.enabled) { %>
+    [data-site-animate] {
+      opacity: 1 !important;
+      transform: none !important;
+      animation: none !important;
+      transition: none !important;
+    }
+  <% } %>
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    [data-site-animate] {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+</style>
+
+
+<%
+  const safeUnreadNotificationCount =
+    typeof unreadNotificationCount !== "undefined"
+      ? Number(unreadNotificationCount || 0)
+      : 0;
+
+  const safeIsLoggedInMember =
+    typeof isLoggedInMember !== "undefined"
+      ? Boolean(isLoggedInMember)
+      : false;
+
+  const safeCanAdmin =
+    typeof canAdmin !== "undefined"
+      ? Boolean(canAdmin)
+      : false;
+
+  const safeIsFounder =
+    typeof isFounder !== "undefined"
+      ? Boolean(isFounder)
+      : false;
+%>
+
+
+<%
+  const siteDesign = data.group.siteDesign || {
+    fontFamily: "system",
+    baseFontSize: 16,
+    headingScale: 100,
+    textAlign: "left",
+    heroAlign: "left",
+    contentWidth: 1200,
+    sectionSpacing: 100,
+    cardRadius: 18,
+    buttonRadius: 13,
+    cardOpacity: 94,
+    navStyle: "normal",
+    showAnimations: true
+  };
+
+  const fontStacks = {
+    system: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    modern: '"Trebuchet MS", Inter, ui-sans-serif, sans-serif',
+    rounded: '"Arial Rounded MT Bold", "Trebuchet MS", ui-sans-serif, sans-serif',
+    editorial: 'Georgia, "Times New Roman", serif',
+    mono: '"Cascadia Code", "Consolas", monospace'
+  };
+%>
+<style>
+  :root {
+    --site-font-family: <%- fontStacks[siteDesign.fontFamily] || fontStacks.system %>;
+    --site-base-size: <%= Number(siteDesign.baseFontSize || 16) %>px;
+    --site-heading-scale: <%= Number(siteDesign.headingScale || 100) / 100 %>;
+    --site-content-width: <%= Number(siteDesign.contentWidth || 1200) %>px;
+    --site-section-space: <%= Number(siteDesign.sectionSpacing || 100) %>px;
+    --site-card-radius: <%= Number(siteDesign.cardRadius ?? 18) %>px;
+    --site-button-radius: <%= Number(siteDesign.buttonRadius ?? 13) %>px;
+    --site-card-opacity: <%= Number(siteDesign.cardOpacity ?? 94) / 100 %>;
+    --site-text-align: <%= siteDesign.textAlign || "left" %>;
+    --site-hero-align: <%= siteDesign.heroAlign || "left" %>;
+  }
+
+  html {
+    font-size: var(--site-base-size);
+  }
+
+  body {
+    font-family: var(--site-font-family);
+  }
+
+  body:not(.admin-page):not(.member-settings-page) {
+    text-align: var(--site-text-align);
+  }
+
+  form,
+  form label,
+  form input,
+  form select,
+  form textarea {
+    text-align: left;
+  }
+
+  main:not(.themed-profile-main),
+  .container,
+  .section,
+  .page-hero,
+  .dashboard-shell {
+    width: min(calc(100% - 2rem), var(--site-content-width));
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body.admin-page main,
+  body.member-settings-page main {
+    width: min(calc(100% - 2rem), 1400px);
+  }
+
+  .section {
+    padding-top: var(--site-section-space);
+    padding-bottom: var(--site-section-space);
+  }
+
+  h1 {
+    font-size: clamp(
+      <%= (3 * Number(siteDesign.headingScale || 100) / 100).toFixed(2) %>rem,
+      <%= (8 * Number(siteDesign.headingScale || 100) / 100).toFixed(2) %>vw,
+      <%= (6.5 * Number(siteDesign.headingScale || 100) / 100).toFixed(2) %>rem
+    );
+  }
+
+  h2 {
+    font-size: clamp(
+      <%= (2 * Number(siteDesign.headingScale || 100) / 100).toFixed(2) %>rem,
+      <%= (5 * Number(siteDesign.headingScale || 100) / 100).toFixed(2) %>vw,
+      <%= (3.4 * Number(siteDesign.headingScale || 100) / 100).toFixed(2) %>rem
+    );
+  }
+
+  h3 {
+    font-size: <%= (1.2 * Number(siteDesign.headingScale || 100) / 100).toFixed(2) %>rem;
+  }
+
+  .card,
+  .panel,
+  .member-card,
+  .contact-card,
+  .application-card,
+  .stat-card {
+    border-radius: var(--site-card-radius);
+    background-color: rgba(18, 21, 42, var(--site-card-opacity));
+  }
+
+  .button,
+  button,
+  input,
+  select,
+  textarea {
+    border-radius: var(--site-button-radius);
+  }
+
+  .hero,
+  .page-hero {
+    text-align: var(--site-hero-align);
+  }
+
+  .hero .actions,
+  .page-hero .actions {
+    justify-content:
+      <%= siteDesign.heroAlign === "center"
+        ? "center"
+        : siteDesign.heroAlign === "right"
+          ? "flex-end"
+          : "flex-start" %>;
+  }
+
+  <% if (siteDesign.navStyle === "compact") { %>
+    .site-header,
+    header nav {
+      min-height: 58px;
+    }
+
+    header nav a {
+      padding: .35rem .45rem;
+      font-size: .88rem;
+    }
+  <% } else if (siteDesign.navStyle === "spacious") { %>
+    .site-header,
+    header nav {
+      min-height: 92px;
+    }
+
+    header nav {
+      gap: 1rem;
+    }
+
+    header nav a {
+      padding: .75rem .85rem;
+      font-size: 1.02rem;
+    }
+  <% } %>
+</style>
+
+
+<%
+  const siteBg = data.group.siteBackground || {
+    mode: "gradient",
+    color1: "#090b16",
+    color2: "#10232d",
+    image: "",
+    overlay: 82,
+    fixed: true
+  };
+%>
+<style>
+  body {
+    <% if (siteBg.mode === "solid") { %>
+      background: <%= siteBg.color1 %>;
+    <% } else if (siteBg.mode === "image" && siteBg.image) { %>
+      background:
+        linear-gradient(
+          rgba(5, 7, 16, <%= Number(siteBg.overlay ?? 82) / 100 %>),
+          rgba(5, 7, 16, <%= Number(siteBg.overlay ?? 82) / 100 %>)
+        ),
+        url("<%= siteBg.image %>") center / cover
+        <%= siteBg.fixed === false ? "scroll" : "fixed" %> no-repeat;
+    <% } else { %>
+      background:
+        radial-gradient(circle at top left, <%= siteBg.color2 %>, transparent 42%),
+        radial-gradient(circle at bottom right, <%= siteBg.color1 %>, transparent 48%),
+        linear-gradient(135deg, <%= siteBg.color1 %>, <%= siteBg.color2 %>);
+      background-attachment: <%= siteBg.fixed === false ? "scroll" : "fixed" %>;
+    <% } %>
+  }
+</style>
+
+
+
+<%
+  const headerDesign = data.group.headerDesign || {
+    mode: "galaxy",
+    color1: "#050818",
+    color2: "#17103a",
+    accent1: "#5767ff",
+    accent2: "#be3cff",
+    image: "",
+    overlay: 76,
+    blur: 18,
+    shadow: true
+  };
+
+  const headerOverlay = Math.max(
+    0,
+    Math.min(95, Number(headerDesign.overlay ?? 76))
+  ) / 100;
+
+  const headerBlur = Math.max(
+    0,
+    Math.min(30, Number(headerDesign.blur ?? 18))
+  );
+%>
+
+<style id="vn-critical-navigation">
+  .vn-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    width: 100% !important;
+    border-bottom: 1px solid rgba(255,255,255,.1) !important;
+    <% if (headerDesign.mode === "solid") { %>
+      background: <%= headerDesign.color1 %> !important;
+    <% } else if (headerDesign.mode === "gradient") { %>
+      background:
+        linear-gradient(
+          105deg,
+          <%= headerDesign.color1 %>,
+          <%= headerDesign.color2 %>
+        ) !important;
+    <% } else if (headerDesign.mode === "image" && headerDesign.image) { %>
+      background:
+        linear-gradient(
+          rgba(5, 8, 24, <%= headerOverlay %>),
+          rgba(5, 8, 24, <%= headerOverlay %>)
+        ),
+        url("<%= headerDesign.image %>")
+        center / cover no-repeat !important;
+    <% } else { %>
+      background:
+        radial-gradient(
+          circle at 18% 15%,
+          <%= headerDesign.accent1 %>,
+          transparent 34%
+        ),
+        radial-gradient(
+          circle at 78% 0%,
+          <%= headerDesign.accent2 %>,
+          transparent 38%
+        ),
+        linear-gradient(
+          105deg,
+          <%= headerDesign.color1 %>,
+          <%= headerDesign.color2 %>
+        ) !important;
+    <% } %>
+    box-shadow:
+      <%= headerDesign.shadow === false
+        ? "none"
+        : "0 10px 32px rgba(0, 0, 0, .32), inset 0 -1px 0 rgba(135, 112, 255, .18)" %>
+      !important;
+    backdrop-filter: blur(<%= headerBlur %>px) !important;
+  }
+
+  .vn-header, .vn-header * {
+    box-sizing: border-box !important;
+  }
+
+  .vn-header-inner {
+    width: min(1400px, calc(100% - 32px)) !important;
+    min-height: 76px !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 24px !important;
+  }
+
+  .vn-brand {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    color: #fff !important;
+    text-decoration: none !important;
+    flex: 0 0 auto !important;
+  }
+
+  .vn-brand-logo-shell,
+  .vn-brand-logo-shell > img,
+  .vn-brand-mark {
+    width: 46px !important;
+    height: 46px !important;
+    flex: 0 0 46px !important;
+    border-radius: 13px !important;
+  }
+
+  .vn-brand-logo-shell {
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+  }
+
+  .vn-brand-logo-shell > img {
+    display: block !important;
+    object-fit: contain !important;
+  }
+
+  .vn-brand-mark {
+    place-items: center !important;
+    color: white !important;
+    font: 900 16px/1 system-ui, sans-serif !important;
+    letter-spacing: -1px !important;
+    background: linear-gradient(145deg,#57d8ff,#7a5cff) !important;
+    box-shadow: 0 10px 30px rgba(84,117,255,.3) !important;
+  }
+
+  .vn-brand-mark:not([hidden]) {
+    display: grid !important;
+  }
+
+  .vn-brand-text {
+    display: grid !important;
+    gap: 2px !important;
+    line-height: 1.05 !important;
+  }
+
+  .vn-brand-text strong {
+    color: white !important;
+    font: 800 16px/1.1 system-ui, sans-serif !important;
+    white-space: nowrap !important;
+  }
+
+  .vn-brand-text small {
+    color: rgba(255,255,255,.55) !important;
+    font: 700 10px/1.1 system-ui, sans-serif !important;
+    letter-spacing: 1.2px !important;
+    text-transform: uppercase !important;
+  }
+
+  .vn-navigation {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+  }
+
+  .vn-nav-group {
+    position: relative !important;
+    margin: 0 !important;
+  }
+
+  .vn-nav-group > summary {
+    list-style: none !important;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0 15px !important;
+    border: 1px solid rgba(255,255,255,.08) !important;
+    border-radius: 12px !important;
+    color: rgba(255,255,255,.84) !important;
+    background: rgba(255,255,255,.035) !important;
+    font: 750 14px/1 system-ui, sans-serif !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+  }
+
+  .vn-nav-group > summary::-webkit-details-marker {
+    display: none !important;
+  }
+
+  .vn-nav-group > summary::marker {
+    content: "" !important;
+  }
+
+  .vn-nav-group > summary::after {
+    content: "▾" !important;
+    color: rgba(255,255,255,.5) !important;
+    font-size: 11px !important;
+    transition: transform .18s ease !important;
+  }
+
+  .vn-nav-group[open] > summary,
+  .vn-nav-group > summary:hover {
+    color: #fff !important;
+    background: rgba(124,92,255,.16) !important;
+    border-color: rgba(124,92,255,.35) !important;
+  }
+
+  .vn-nav-group[open] > summary::after {
+    transform: rotate(180deg) !important;
+  }
+
+  .vn-dropdown {
+    position: absolute !important;
+    top: calc(100% + 10px) !important;
+    right: 0 !important;
+    width: 245px !important;
+    display: grid !important;
+    gap: 4px !important;
+    padding: 9px !important;
+    border: 1px solid rgba(255,255,255,.12) !important;
+    border-radius: 14px !important;
+    background: rgba(10,11,25,.99) !important;
+    box-shadow: 0 24px 70px rgba(0,0,0,.55) !important;
+  }
+
+  .vn-dropdown a,
+  .vn-dropdown button {
+    width: 100% !important;
+    min-height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 12px !important;
+    border: 0 !important;
+    border-radius: 9px !important;
+    color: rgba(255,255,255,.84) !important;
+    text-align: left !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    font: 650 14px/1 system-ui, sans-serif !important;
+    cursor: pointer !important;
+  }
+
+  .vn-dropdown a:hover,
+  .vn-dropdown button:hover {
+    color: white !important;
+    background: rgba(255,255,255,.075) !important;
+  }
+
+  .vn-dropdown form {
+    margin: 0 !important;
+  }
+
+  .vn-dropdown-search {
+    display: grid !important;
+    gap: 6px !important;
+    padding: 4px !important;
+  }
+
+  .vn-dropdown-search input {
+    width: 100% !important;
+    min-height: 40px !important;
+    padding: 0 10px !important;
+    border-radius: 8px !important;
+  }
+
+  .vn-member-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    display: grid !important;
+    place-items: center !important;
+    overflow: hidden !important;
+    border-radius: 8px !important;
+    background: rgba(124,92,255,.2) !important;
+  }
+
+  .vn-member-avatar img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .vn-mobile-toggle {
+    display: none !important;
+    width: 44px !important;
+    height: 44px !important;
+    padding: 10px !important;
+    border: 1px solid rgba(255,255,255,.1) !important;
+    border-radius: 12px !important;
+    background: rgba(255,255,255,.04) !important;
+  }
+
+  .vn-mobile-toggle span {
+    display: block !important;
+    height: 2px !important;
+    margin: 4px 0 !important;
+    background: white !important;
+  }
+
+  @media (max-width: 900px) {
+    .vn-header-inner {
+      width: calc(100% - 16px) !important;
+      min-height: 68px !important;
+    }
+
+    .vn-mobile-toggle {
+      display: block !important;
+    }
+
+    .vn-navigation {
+      position: fixed !important;
+      inset: 68px 0 auto 0 !important;
+      max-height: calc(100vh - 68px) !important;
+      display: none !important;
+      padding: 12px !important;
+      overflow-y: auto !important;
+      <% if (headerDesign.mode === "solid") { %>
+        background: <%= headerDesign.color1 %> !important;
+      <% } else if (headerDesign.mode === "image" && headerDesign.image) { %>
+        background:
+          linear-gradient(
+            rgba(5, 8, 24, .94),
+            rgba(5, 8, 24, .94)
+          ),
+          url("<%= headerDesign.image %>")
+          center / cover no-repeat !important;
+      <% } else { %>
+        background:
+          linear-gradient(
+            145deg,
+            <%= headerDesign.color1 %>,
+            <%= headerDesign.color2 %>
+          ) !important;
+      <% } %>
+    }
+
+    .vn-navigation.is-open {
+      display: grid !important;
+      gap: 8px !important;
+    }
+
+    .vn-nav-group,
+    .vn-direct-link {
+      width: 100% !important;
+    }
+
+    .vn-nav-group > summary,
+    .vn-direct-link {
+      width: 100% !important;
+      min-height: 48px !important;
+      justify-content: space-between !important;
+    }
+
+    .vn-dropdown {
+      position: static !important;
+      width: 100% !important;
+      margin-top: 6px !important;
+      box-shadow: none !important;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .vn-brand-text small {
+      display: none !important;
+    }
+
+    .vn-brand-text strong {
+      font-size: 14px !important;
+    }
+  }
+</style>
+
+<header class="vn-header">
+  <div class="vn-header-inner">
+    <a class="vn-brand" href="/" aria-label="<%= visibleSiteName %> Startseite">
+      <span class="vn-brand-logo-shell">
+        <% if (visibleBrandLogo) { %>
+          <img
+            src="<%= visibleBrandLogo %>"
+            alt=""
+            onerror="this.hidden=true; this.nextElementSibling.hidden=false"
+          >
+          <span class="vn-brand-mark" hidden><%= visibleBrandAbbreviation %></span>
+        <% } else { %>
+          <span class="vn-brand-mark"><%= visibleBrandAbbreviation %></span>
+        <% } %>
+      </span>
+
+      <span class="vn-brand-text">
+        <strong><%= visibleSiteName %></strong>
+        <small><%= visibleBrandSubtitle %></small>
+      </span>
+    </a>
+
+    <button
+      class="vn-mobile-toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="vnNavigation"
+      aria-label="Menü öffnen"
+    >
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="vn-navigation" id="vnNavigation" aria-label="Hauptnavigation">
+      <details class="vn-nav-group">
+        <summary>Entdecken</summary>
+        <div class="vn-dropdown">
+          <a href="/">Startseite</a>
+          <a href="/live">Gerade live</a>
+          <a href="/schedule">Streamplan</a>
+          <a href="/events">Events</a>
+          <a href="/news">News</a>
+        </div>
+      </details>
+
+      <details class="vn-nav-group">
+        <summary>Community</summary>
+        <div class="vn-dropdown">
+          <a href="/members">Mitglieder</a>
+          <a href="/apply">Bewerben</a>
+          <a href="/kontakt">Kontakt</a>
+        </div>
+      </details>
+
+      <% if (currentMember) { %>
+        <details class="vn-nav-group vn-member-group">
+          <summary>
+            <span class="vn-member-avatar">
+              <% if (currentMember.avatar) { %>
+                <img src="<%= currentMember.avatar %>" alt="">
+              <% } else { %>
+                <span><%= currentMember.name.slice(0,1).toUpperCase() %></span>
+              <% } %>
+            </span>
+            <span>Mitgliederbereich</span>
+          </summary>
+
+          <div class="vn-dropdown">
+            <a href="/member-area">Dashboard</a>
+            <a href="/member-area/inbox">Postfach</a>
+            <a href="/member-area/calendar">Teamkalender</a>
+            <a href="/member-area/community">Pinnwand</a>
+            <a href="/member-area/projects">Projekte</a>
+            <a href="/member-area/media">Dateien</a>
+            <a href="/member-area/polls">Abstimmungen</a>
+            <form method="post" action="/member-logout">
+              <button type="submit">Abmelden</button>
+            </form>
+          </div>
+        </details>
+      <% } else { %>
+        <a class="vn-direct-link" href="/member-login">Anmelden</a>
+      <% } %>
+
+      <details class="vn-nav-group">
+        <summary>Mehr</summary>
+        <div class="vn-dropdown">
+          <form action="/search" method="get" class="vn-dropdown-search">
+            <label class="sr-only" for="vnSearchInput">Website durchsuchen</label>
+            <input id="vnSearchInput" name="q" type="search" placeholder="Website durchsuchen">
+            <button type="submit">Suchen</button>
+          </form>
+
+          <% if (currentMember) { %>
+            <a href="/member-area/notifications" class="vn-notification-link">
+              Benachrichtigungen
+              <% if (unreadNotificationCount > 0) { %>
+                <strong><%= unreadNotificationCount > 99 ? "99+" : unreadNotificationCount %></strong>
+              <% } %>
+            </a>
+          <% } %>
+
+          <% if (canAdmin) { %>
+            <a href="/admin">Admin-Bereich</a>
+          <% } %>
+        </div>
+      </details>
+    </nav>
+  </div>
+</header>
+
+<script>
+(() => {
+  const toggle = document.querySelector(".vn-mobile-toggle");
+  const nav = document.getElementById("vnNavigation");
+  const groups = [...document.querySelectorAll(".vn-nav-group")];
+
+  if (!toggle || !nav) return;
+
+  function closeMobileMenu() {
+    toggle.setAttribute("aria-expanded", "false");
+    nav.classList.remove("is-open");
+    document.body.classList.remove("vn-menu-open");
+  }
+
+  function closeOtherGroups(current) {
+    groups.forEach(group => {
+      if (group !== current) group.open = false;
+    });
+  }
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    nav.classList.toggle("is-open", !open);
+    document.body.classList.toggle("vn-menu-open", !open);
+  });
+
+  groups.forEach(group => {
+    group.addEventListener("toggle", () => {
+      if (group.open) closeOtherGroups(group);
+    });
+  });
+
+  document.addEventListener("click", event => {
+    const insideHeader = event.target.closest(".vn-header");
+    if (!insideHeader) {
+      groups.forEach(group => group.open = false);
+      closeMobileMenu();
+    }
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      groups.forEach(group => group.open = false);
+      closeMobileMenu();
+    }
+  });
+
+  nav.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => {
+      groups.forEach(group => group.open = false);
+      closeMobileMenu();
+    });
+  });
+})();
+</script>
+
+<script>
+(() => {
+  const toggle = document.querySelector(".mobile-nav-toggle");
+  const navigation = document.getElementById("primaryNavigation");
+
+  if (!toggle || !navigation) return;
+
+  function closeNavigation() {
+    toggle.setAttribute("aria-expanded", "false");
+    navigation.classList.remove("is-open");
+    document.body.classList.remove("mobile-navigation-open");
+  }
+
+  toggle.addEventListener("click", () => {
+    const open = toggle.getAttribute("aria-expanded") === "true";
+    toggle.setAttribute("aria-expanded", String(!open));
+    navigation.classList.toggle("is-open", !open);
+    document.body.classList.toggle("mobile-navigation-open", !open);
+  });
+
+  navigation.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", closeNavigation);
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") closeNavigation();
+  });
+
+  document.addEventListener("click", event => {
+    if (
+      navigation.classList.contains("is-open") &&
+      !navigation.contains(event.target) &&
+      !toggle.contains(event.target)
+    ) {
+      closeNavigation();
+    }
+  });
+})();
+</script>
+

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width">
+  <title>Projekte · <%= data.group.branding?.browserTitle || data.group.name %></title>
+  <link rel="stylesheet" href="/styles.css?v=30.1.2">
+  <%- include("partials/branding-head", { data }) %>
+</head>
+<body>
+<%- include("partials/header", { data }) %>
+<main>
+  <section class="page-hero compact-hero">
+    <span class="eyebrow">Mitgliederbereich</span>
+    <h1>Projekte</h1>
+    <p>Gemeinsame Streams, Videos und Ideen mit Team, Status und Fortschritt.</p>
+  </section>
+
+  <section class="section project-grid">
+    <% if (!projects.length) { %><article class="panel"><h2>Keine Projekte</h2><p>Dir wurde noch kein Projekt zugewiesen.</p></article><% } %>
+    <% projects.forEach(project => { %>
+      <article class="panel project-card" id="<%= project.id %>">
+        <div class="section-head">
+          <div>
+            <span class="project-status status-<%= project.status %>">
+              <%= project.status === "idea" ? "Idee" : project.status === "planned" ? "Geplant" : project.status === "active" ? "In Arbeit" : "Fertig" %>
+            </span>
+            <h2><%= project.title %></h2>
+          </div>
+          <% if (project.dueDate) { %><strong>Frist: <%= project.dueDate %></strong><% } %>
+        </div>
+
+        <p class="internal-content"><%= project.description || "Keine Beschreibung." %></p>
+        <p><strong>Leitung:</strong> <%= project.leader?.name || "Nicht festgelegt" %></p>
+        <p><strong>Team:</strong> <%= project.members.map(m => m.name).join(", ") || "Niemand zugewiesen" %></p>
+
+        <div class="project-progress-bar"><span style="width:<%= project.progress || 0 %>%"></span></div>
+        <p><%= project.progress || 0 %>% abgeschlossen</p>
+
+        <% if (canAdmin || project.leaderMemberId === member.id) { %>
+          <form method="post" action="/member-area/projects/<%= project.id %>/progress" class="project-progress-form">
+            <input type="range" name="progress" min="0" max="100" value="<%= project.progress || 0 %>">
+            <button class="button small primary" type="submit">Fortschritt speichern</button>
+          </form>
+        <% } %>
+      </article>
+    <% }) %>
+  </section>
+</main>
+<%- include("partials/footer", { data }) %>
+</body>
+</html>
